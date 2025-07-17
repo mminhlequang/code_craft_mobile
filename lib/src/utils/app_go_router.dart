@@ -7,6 +7,7 @@ import '../presentation/home/cubit/home_cubit.dart';
 import '../presentation/home/home_screen.dart';
 import '../presentation/splash/splash_screen.dart';
 import '../presentation/introduction/introduction_screen.dart';
+import '../presentation/auth/login_screen.dart';
 import 'app_get.dart';
 
 GlobalKey<NavigatorState> get appNavigatorKey =>
@@ -30,6 +31,12 @@ class AppGoRouter {
   void goToHome() {
     if (isAppContextReady) {
       appContext.go('/home');
+    }
+  }
+
+  void goToLogin() {
+    if (isAppContextReady) {
+      appContext.go('/login');
     }
   }
 
@@ -87,6 +94,10 @@ final goRouter = GoRouter(
     GoRoute(
       path: '/introduction',
       builder: (context, state) => const IntroductionScreen(),
+    ),
+    GoRoute(
+      path: '/login',
+      builder: (context, state) => const LoginScreen(),
     ),
     GoRoute(
       path: '/home',

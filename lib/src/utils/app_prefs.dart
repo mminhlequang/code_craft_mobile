@@ -122,4 +122,30 @@ class AppPrefs {
   //     _box.delete('user_info');
   //   }
   // }
+
+  // User authentication methods
+  bool get isUserLoggedIn => _boxAuth.get('is_logged_in') ?? false;
+  
+  set isUserLoggedIn(bool value) => _boxAuth.put('is_logged_in', value);
+  
+  String get userEmail => _boxAuth.get('user_email') ?? '';
+  
+  set userEmail(String value) => _boxAuth.put('user_email', value);
+  
+  String get userName => _boxAuth.get('user_name') ?? '';
+  
+  set userName(String value) => _boxAuth.put('user_name', value);
+
+  // Convenience methods for setting user data
+  Future<void> setUserLoggedIn(bool value) async {
+    await _boxAuth.put('is_logged_in', value);
+  }
+
+  Future<void> setUserEmail(String value) async {
+    await _boxAuth.put('user_email', value);
+  }
+
+  Future<void> setUserName(String value) async {
+    await _boxAuth.put('user_name', value);
+  }
 }

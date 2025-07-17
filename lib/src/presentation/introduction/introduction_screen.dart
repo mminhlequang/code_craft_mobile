@@ -330,6 +330,9 @@ class _IntroductionScreenState extends State<IntroductionScreen>
                     // Get started button
                     _buildAnimatedCard(5, _buildGetStartedButton()),
 
+                    // Get started button
+                    _buildAnimatedCard(6, _buildLoginButton()),
+
                     const SizedBox(height: AppSizes.paddingXLarge),
                   ]),
                 ),
@@ -353,7 +356,9 @@ class _IntroductionScreenState extends State<IntroductionScreen>
         return Transform.translate(
           offset: Offset(0, 50 * (1 - _cardAnimations[index].value)),
           child: Opacity(
-            opacity: _cardAnimations[index].value>= 1 ? 1 : _cardAnimations[index].value,
+            opacity: _cardAnimations[index].value >= 1
+                ? 1
+                : _cardAnimations[index].value,
             child: child,
           ),
         );
@@ -858,7 +863,7 @@ class _IntroductionScreenState extends State<IntroductionScreen>
         child: InkWell(
           borderRadius: BorderRadius.circular(AppSizes.radiusXLarge),
           onTap: () {
-            AppGoRouter.instance.goToHome();
+            AppGoRouter.instance.goToLogin();
           },
           child: Container(
             width: double.infinity,
@@ -882,6 +887,61 @@ class _IntroductionScreenState extends State<IntroductionScreen>
                   ),
                 ],
               ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Nút đăng nhập dành cho user đã có tài khoản
+  Widget _buildLoginButton() {
+    return Container(
+      width: double.infinity,
+      height: 56,
+      margin: const EdgeInsets.only(top: AppSizes.paddingMedium),
+      decoration: BoxDecoration(
+        color: context.colors.surfaceVariant,
+        borderRadius: BorderRadius.circular(AppSizes.radiusXLarge),
+        boxShadow: [
+          BoxShadow(
+            color: context.colors.primary.withOpacity(0.08),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(
+          color: context.colors.divider,
+          width: 1,
+        ),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppSizes.radiusXLarge),
+          onTap: () {
+            AppGoRouter.instance.goToLogin();
+          },
+          splashColor: context.colors.primary.withOpacity(0.08),
+          highlightColor: Colors.transparent,
+          child: Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.login,
+                  color: context.colors.primary,
+                  size: 22,
+                ),
+                const SizedBox(width: AppSizes.paddingSmall),
+                Text(
+                  'Đăng nhập',
+                  style: context.styles.titleMedium.copyWith(
+                    color: context.colors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
