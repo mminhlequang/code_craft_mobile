@@ -2,8 +2,7 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:temp_package_name/src/utils/utils.dart';
-
+import 'package:app/src/utils/utils.dart';
 
 enum AuthStateType { none, logged }
 

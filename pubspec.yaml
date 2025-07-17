@@ -1,5 +1,5 @@
-name: temp_package_name
-description: Ứng dụng quét, tạo qrcode nội dung động
+name: app
+description: Ứng dụng quét, tạo qrcode nội dung động CodeCraft
 
 version: 1.0.0+1
 

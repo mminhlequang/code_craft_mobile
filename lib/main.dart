@@ -11,6 +11,7 @@ import 'package:flutter_portal/flutter_portal.dart';
 import 'internal_setup.dart';
 import 'src/base/bloc.dart';
 import 'src/utils/utils.dart';
+import 'src/utils/app_go_router.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

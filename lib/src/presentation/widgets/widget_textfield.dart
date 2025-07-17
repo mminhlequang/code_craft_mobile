@@ -1,6 +1,6 @@
 import 'package:internal_core/internal_core.dart';
 import 'package:flutter/material.dart';
-import 'package:temp_package_name/src/constants/constants.dart';
+import 'package:app/src/constants/constants.dart';
 
 enum TextFieldErrorType { hint, normal }
 

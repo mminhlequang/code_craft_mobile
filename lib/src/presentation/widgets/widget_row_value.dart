@@ -4,8 +4,8 @@ import 'package:internal_core/internal_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_portal/flutter_portal.dart';
-import 'package:temp_package_name/src/constants/constants.dart';
-import 'package:temp_package_name/src/utils/utils.dart';
+import 'package:app/src/constants/constants.dart';
+import 'package:app/src/utils/utils.dart';
 
 import 'widget_check.dart';
 import 'widget_popup_container.dart';

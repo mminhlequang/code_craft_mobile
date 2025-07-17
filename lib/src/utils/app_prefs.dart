@@ -59,13 +59,15 @@ class AppPrefs {
 
   String get languageCode => _boxData.get(keyLanguageCode) ?? 'en';
 
-  bool get isLanguageCodeEmpty => _boxData.get(keyLanguageCode) == null || _boxData.get(keyLanguageCode) == '';
+  bool get isLanguageCodeEmpty =>
+      _boxData.get(keyLanguageCode) == null ||
+      _boxData.get(keyLanguageCode) == '';
 
   /// Index of the currently selected color palette.
   /// 0 = default (blue), 1 = green, ... etc. The values are mapped in
   /// [AppColors.availablePalettes].
-  int get colorPaletteIndex => (_boxData.get(keyColorPalette) ?? 0) as int;
-  set colorPaletteIndex(int value) => _boxData.put(keyColorPalette, value);
+  int get colorPaletteIndex => (_boxData.get('color_palette') ?? 0) as int;
+  set colorPaletteIndex(int value) => _boxData.put('color_palette', value);
 
   set dateFormat(String value) => _boxData.put('dateFormat', value);
 

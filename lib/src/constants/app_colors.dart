@@ -2,6 +2,7 @@ import 'package:internal_core/internal_core.dart';
 import 'package:flutter/material.dart';
 
 import '../utils/utils.dart';
+import '../utils/app_prefs.dart';
 import 'app_constants.dart';
 
 // Color palette definitions
@@ -24,6 +25,12 @@ class ColorPalette {
     required this.name,
   });
 }
+
+// Keep original getters for backward compatibility
+Color get appColorBackground => AppColors.instance.background;
+Color get appColorElement => AppColors.instance.element;
+Color get appColorPrimary => AppColors.instance.primary;
+Color get appColorText => AppColors.instance.text;
 
 class AppColors {
   AppColors._();
@@ -96,20 +103,28 @@ class AppColors {
     return availablePalettes[index.clamp(0, availablePalettes.length - 1)];
   }
 
-  // Theme-aware colors
+  // Original getters (keep for backward compatibility)
   Color get text => appValueByTheme(
         const Color(0xFF1A1A1A),
         kdark: const Color(0xFFF5F5F5),
       );
 
-  Color get textSecondary => appValueByTheme(
-        const Color(0xFF666666),
-        kdark: const Color(0xFFB0B0B0),
-      );
-
   Color get background => appValueByTheme(
         const Color(0xFFFFFFFF),
         kdark: const Color(0xFF121212),
+      );
+
+  Color get element => appValueByTheme(
+        const Color(0xFFE0E0E0),
+        kdark: const Color(0xFF3A3A3A),
+      );
+
+  Color get primary => currentPalette.primary;
+
+  // New color getters
+  Color get textSecondary => appValueByTheme(
+        const Color(0xFF666666),
+        kdark: const Color(0xFFB0B0B0),
       );
 
   Color get surface => appValueByTheme(
@@ -122,18 +137,12 @@ class AppColors {
         kdark: const Color(0xFF2A2A2A),
       );
 
-  Color get element => appValueByTheme(
-        const Color(0xFFE0E0E0),
-        kdark: const Color(0xFF3A3A3A),
-      );
-
   Color get divider => appValueByTheme(
         const Color(0xFFE0E0E0),
         kdark: const Color(0xFF3A3A3A),
       );
 
   // Primary colors from current palette
-  Color get primary => currentPalette.primary;
   Color get secondary => currentPalette.secondary;
   Color get accent => currentPalette.accent;
   Color get success => currentPalette.success;
@@ -168,7 +177,7 @@ class AppColors {
         end: Alignment.bottomCenter,
       );
 
-  // Shimmer colors
+  // Original shimmer colors (keep for backward compatibility)
   Color get shimmerHighlightColor => appValueByTheme(
         const Color(0xFFE0E0E0),
         kdark: const Color(0xFF3A3A3A),
@@ -179,7 +188,7 @@ class AppColors {
         kdark: const Color(0xFF2A2A2A),
       );
 
-  // Hover colors
+  // Original hover color (keep for backward compatibility)
   Color get hoverColor => appValueByTheme(
         const Color(0xFFF0F0F0),
         kdark: const Color(0xFF2A2A2A),
@@ -197,7 +206,7 @@ class AppColors {
       );
 }
 
-// Helper function for theme-aware colors
+// Keep original helper function for backward compatibility
 Color appValueByTheme(Color klight, {Color? kdark}) {
   if (AppPrefs.instance.isDarkTheme) {
     return kdark ?? klight;

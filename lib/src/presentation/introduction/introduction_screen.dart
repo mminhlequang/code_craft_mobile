@@ -5,6 +5,7 @@ import 'package:internal_core/internal_core.dart';
 import '../../constants/constants.dart';
 import '../../utils/app_go_router.dart';
 import '../../utils/app_prefs.dart';
+import '../widgets/widgets.dart';
 
 class IntroductionScreen extends StatefulWidget {
   const IntroductionScreen({super.key});
@@ -16,32 +17,107 @@ class IntroductionScreen extends StatefulWidget {
 class _IntroductionScreenState extends State<IntroductionScreen>
     with TickerProviderStateMixin {
   late ScrollController _scrollController;
-  late AnimationController _fadeController;
+  late AnimationController _mainController;
+  late AnimationController _pulseController;
+  late AnimationController _floatingController;
+
   late Animation<double> _fadeAnimation;
+  late Animation<double> _slideAnimation;
+  late Animation<double> _pulseAnimation;
+  late Animation<double> _floatingAnimation;
+
+  final List<Animation<double>> _cardAnimations = [];
 
   @override
   void initState() {
     super.initState();
     _scrollController = ScrollController();
-    _fadeController = AnimationController(
-      duration: AppStyles.instance.animationNormal,
+    _initializeAnimations();
+    _startAnimations();
+  }
+
+  void _initializeAnimations() {
+    _mainController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
       vsync: this,
     );
+
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    );
+
+    _floatingController = AnimationController(
+      duration: const Duration(milliseconds: 3000),
+      vsync: this,
+    );
+
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
     ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeIn,
+      parent: _mainController,
+      curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
     ));
 
-    _fadeController.forward();
+    _slideAnimation = Tween<double>(
+      begin: 100.0,
+      end: 0.0,
+    ).animate(CurvedAnimation(
+      parent: _mainController,
+      curve: const Interval(0.2, 0.8, curve: Curves.easeOutCubic),
+    ));
+
+    _pulseAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.1,
+    ).animate(CurvedAnimation(
+      parent: _pulseController,
+      curve: Curves.easeInOut,
+    ));
+
+    _floatingAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _floatingController,
+      curve: Curves.easeInOut,
+    ));
+
+    // Initialize card animations with staggered timing
+    for (int i = 0; i < 8; i++) {
+      _cardAnimations.add(
+        Tween<double>(
+          begin: 0.0,
+          end: 1.0,
+        ).animate(CurvedAnimation(
+          parent: _mainController,
+          curve: Interval(
+            (i * 0.08) + 0.3,
+            (i * 0.08) + 0.9,
+            curve: Curves.easeOutBack,
+          ),
+        )),
+      );
+    }
+  }
+
+  void _startAnimations() async {
+    try {
+      await _mainController.forward();
+      _pulseController.repeat(reverse: true);
+      _floatingController.repeat(reverse: true);
+    } catch (e) {
+      // Handle animation errors gracefully
+    }
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
-    _fadeController.dispose();
+    _mainController.dispose();
+    _pulseController.dispose();
+    _floatingController.dispose();
     super.dispose();
   }
 
@@ -59,114 +135,263 @@ class _IntroductionScreenState extends State<IntroductionScreen>
       child: Scaffold(
         body: Container(
           decoration: BoxDecoration(
-            gradient: context.colors.backgroundGradient,
-          ),
-          child: SafeArea(
-            child: FadeTransition(
-              opacity: _fadeAnimation,
-              child: CustomScrollView(
-                controller: _scrollController,
-                slivers: [
-                  // App Bar
-                  SliverAppBar(
-                    expandedHeight: 120,
-                    floating: false,
-                    pinned: true,
-                    backgroundColor: Colors.transparent,
-                    elevation: 0,
-                    flexibleSpace: FlexibleSpaceBar(
-                      title: Text(
-                        appName,
-                        style: context.styles.headlineMedium.copyWith(
-                          color: context.colors.text,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      centerTitle: true,
-                      background: Container(
-                        decoration: BoxDecoration(
-                          gradient: context.colors.primaryGradient,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  // Content
-                  SliverPadding(
-                    padding: const EdgeInsets.all(AppSizes.paddingLarge),
-                    sliver: SliverList(
-                      delegate: SliverChildListDelegate([
-                        // Welcome Section
-                        _buildSection(
-                          title: 'Chào mừng đến với CodeCraft',
-                          subtitle: 'Nền tảng tạo và quản lý QR Code hàng đầu',
-                          icon: Icons.qr_code_scanner,
-                          content:
-                              'CodeCraft giúp bạn tạo ra những QR Code chuyên nghiệp với nhiều tính năng độc đáo. Từ QR Code cơ bản đến QR Code động với phân tích chi tiết.',
-                        ),
-
-                        const SizedBox(height: AppSizes.paddingXLarge),
-
-                        // Features Section
-                        _buildFeaturesSection(),
-
-                        const SizedBox(height: AppSizes.paddingXLarge),
-
-                        // How to Use Section
-                        _buildHowToUseSection(),
-
-                        const SizedBox(height: AppSizes.paddingXLarge),
-
-                        // FAQ Section
-                        _buildFAQSection(),
-
-                        const SizedBox(height: AppSizes.paddingXLarge),
-
-                        // Support Section
-                        _buildSupportSection(),
-
-                        const SizedBox(height: AppSizes.paddingXXLarge),
-
-                        // Get Started Button
-                        _buildGetStartedButton(),
-
-                        const SizedBox(height: AppSizes.paddingLarge),
-                      ]),
-                    ),
-                  ),
-                ],
-              ),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                context.colors.primary.withOpacity(0.1),
+                context.colors.background,
+                context.colors.accent.withOpacity(0.05),
+              ],
             ),
+          ),
+          child: CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              // Hero Header
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: MediaQuery.of(context).padding.top,
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: AnimatedBuilder(
+                  animation: _mainController,
+                  builder: (context, child) {
+                    return Transform.translate(
+                      offset: Offset(0, _slideAnimation.value),
+                      child: Opacity(
+                        opacity: _fadeAnimation.value,
+                        child: Container(
+                          height: 280,
+                          margin: const EdgeInsets.all(AppSizes.paddingLarge),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                context.colors.primary,
+                                context.colors.primary.withOpacity(0.8),
+                                context.colors.accent,
+                              ],
+                            ),
+                            borderRadius:
+                                BorderRadius.circular(AppSizes.radiusXLarge),
+                            boxShadow: [
+                              BoxShadow(
+                                color: context.colors.primary.withOpacity(0.3),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
+                              ),
+                            ],
+                          ),
+                          child: Stack(
+                            children: [
+                              // Background decorative elements
+                              Positioned(
+                                top: 20,
+                                left: 20,
+                                child: AnimatedBuilder(
+                                  animation: _pulseAnimation,
+                                  builder: (context, child) {
+                                    return Transform.scale(
+                                      scale: _pulseAnimation.value,
+                                      child: Container(
+                                        width: 60,
+                                        height: 60,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.white.withOpacity(0.1),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              Positioned(
+                                top: 60,
+                                right: 30,
+                                child: AnimatedBuilder(
+                                  animation: _floatingAnimation,
+                                  builder: (context, child) {
+                                    return Transform.translate(
+                                      offset: Offset(
+                                          0, 10 * _floatingAnimation.value),
+                                      child: Container(
+                                        width: 40,
+                                        height: 40,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Colors.white.withOpacity(0.1),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              // Main content
+                              Padding(
+                                padding: const EdgeInsets.all(
+                                    AppSizes.paddingXLarge),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    // App icon
+                                    Container(
+                                      width: 80,
+                                      height: 80,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.2),
+                                        borderRadius: BorderRadius.circular(
+                                            AppSizes.radiusLarge),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color:
+                                                Colors.black.withOpacity(0.1),
+                                            blurRadius: 10,
+                                            offset: const Offset(0, 5),
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Icon(
+                                        Icons.qr_code_scanner,
+                                        size: 40,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                        height: AppSizes.paddingLarge),
+                                    // App name
+                                    Text(
+                                      appName,
+                                      style:
+                                          context.styles.headlineLarge.copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 2.0,
+                                      ),
+                                    ),
+                                    const SizedBox(
+                                        height: AppSizes.paddingSmall),
+                                    // Tagline
+                                    Text(
+                                      'Tạo QR Code chuyên nghiệp',
+                                      style:
+                                          context.styles.titleMedium.copyWith(
+                                        color: Colors.white.withOpacity(0.9),
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+
+              // Content sections
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppSizes.paddingLarge),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    const SizedBox(height: AppSizes.paddingMedium),
+
+                    // Welcome card
+                    _buildAnimatedCard(0, _buildWelcomeCard()),
+
+                    const SizedBox(height: AppSizes.paddingLarge),
+
+                    // Features grid
+                    _buildAnimatedCard(1, _buildFeaturesGrid()),
+
+                    const SizedBox(height: AppSizes.paddingLarge),
+
+                    // How to use
+                    _buildAnimatedCard(2, _buildHowToUseCard()),
+
+                    const SizedBox(height: AppSizes.paddingLarge),
+
+                    // Benefits
+                    _buildAnimatedCard(3, _buildBenefitsCard()),
+
+                    const SizedBox(height: AppSizes.paddingLarge),
+
+                    // Stats
+                    _buildAnimatedCard(4, _buildStatsCard()),
+
+                    const SizedBox(height: AppSizes.paddingLarge),
+
+                    // Get started button
+                    _buildAnimatedCard(5, _buildGetStartedButton()),
+
+                    const SizedBox(height: AppSizes.paddingXLarge),
+                  ]),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: SizedBox(
+                  height: MediaQuery.of(context).padding.bottom,
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildSection({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required String content,
-  }) {
+  Widget _buildAnimatedCard(int index, Widget child) {
+    return AnimatedBuilder(
+      animation: _cardAnimations[index],
+      builder: (context, child) {
+        return Transform.translate(
+          offset: Offset(0, 50 * (1 - _cardAnimations[index].value)),
+          child: Opacity(
+            opacity: _cardAnimations[index].value,
+            child: child,
+          ),
+        );
+      },
+      child: child,
+    );
+  }
+
+  Widget _buildWelcomeCard() {
     return Container(
-      padding: const EdgeInsets.all(AppSizes.paddingLarge),
-      decoration: context.styles.cardDecoration,
+      padding: const EdgeInsets.all(AppSizes.paddingXLarge),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppSizes.radiusXLarge),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(AppSizes.paddingMedium),
                 decoration: BoxDecoration(
-                  gradient: context.colors.primaryGradient,
+                  gradient: LinearGradient(
+                    colors: [context.colors.primary, context.colors.accent],
+                  ),
                   borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
                 ),
-                child: Icon(
-                  icon,
+                child: const Icon(
+                  Icons.auto_awesome,
                   color: Colors.white,
-                  size: AppSizes.iconMedium,
+                  size: 24,
                 ),
               ),
               const SizedBox(width: AppSizes.paddingMedium),
@@ -175,14 +400,14 @@ class _IntroductionScreenState extends State<IntroductionScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      title,
+                      'Chào mừng bạn!',
                       style: context.styles.headlineSmall.copyWith(
                         color: context.colors.text,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
-                      subtitle,
+                      'Khám phá thế giới QR Code',
                       style: context.styles.bodyMedium.copyWith(
                         color: context.colors.textSecondary,
                       ),
@@ -192,23 +417,158 @@ class _IntroductionScreenState extends State<IntroductionScreen>
               ),
             ],
           ),
-          const SizedBox(height: AppSizes.paddingMedium),
+          const SizedBox(height: AppSizes.paddingLarge),
           Text(
-            content,
+            'CodeCraft là nền tảng tạo QR Code hàng đầu với giao diện hiện đại, tính năng mạnh mẽ và trải nghiệm người dùng tuyệt vời. Tạo QR Code chuyên nghiệp chỉ trong vài giây!',
             style: context.styles.bodyMedium.copyWith(
-              color: context.colors.text,
+              color: context.colors.textSecondary,
               height: 1.6,
             ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildFeaturesSection() {
+  Widget _buildFeaturesGrid() {
+    final features = [
+      {
+        'icon': Icons.qr_code,
+        'title': 'Tạo QR Code',
+        'desc': 'Nhiều loại QR Code'
+      },
+      {
+        'icon': Icons.palette,
+        'title': 'Tùy chỉnh',
+        'desc': 'Màu sắc & thiết kế'
+      },
+      {
+        'icon': Icons.analytics,
+        'title': 'Phân tích',
+        'desc': 'Thống kê chi tiết'
+      },
+      {'icon': Icons.share, 'title': 'Chia sẻ', 'desc': 'Dễ dàng chia sẻ'},
+      {
+        'icon': Icons.security,
+        'title': 'Bảo mật',
+        'desc': 'An toàn & riêng tư'
+      },
+      {
+        'icon': Icons.speed,
+        'title': 'Nhanh chóng',
+        'desc': 'Tạo trong giây lát'
+      },
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Tính năng nổi bật',
+          style: context.styles.headlineSmall.copyWith(
+            color: context.colors.text,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: AppSizes.paddingLarge),
+        // Sử dụng Wrap thay cho GridView để hiển thị các tính năng, đảm bảo responsive và tối ưu UX/UI
+        Wrap(
+          spacing: AppSizes.paddingMedium,
+          runSpacing: AppSizes.paddingMedium,
+          children: features.map((feature) {
+            return SizedBox(
+              width: (MediaQuery.of(context).size.width -
+                      (AppSizes.paddingLarge *
+                          2) - // Padding ngoài của SliverPadding
+                      AppSizes.paddingMedium) /
+                  2, // Chia 2 cột, trừ spacing
+              child: Container(
+                padding: const EdgeInsets.all(AppSizes.paddingMedium),
+                decoration: BoxDecoration(
+                  color: context.colors.surface,
+                  borderRadius: BorderRadius.circular(AppSizes.radiusLarge),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(AppSizes.paddingMedium),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            context.colors.primary.withOpacity(0.1),
+                            context.colors.accent.withOpacity(0.1),
+                          ],
+                        ),
+                        borderRadius:
+                            BorderRadius.circular(AppSizes.radiusMedium),
+                      ),
+                      child: Icon(
+                        feature['icon'] as IconData,
+                        color: context.colors.primary,
+                        size: 28,
+                      ),
+                    ),
+                    const SizedBox(height: AppSizes.paddingMedium),
+                    Text(
+                      feature['title'] as String,
+                      style: context.styles.titleSmall.copyWith(
+                        color: context.colors.text,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    // const SizedBox(height: AppSizes.paddingTiny),
+                    Text(
+                      feature['desc'] as String,
+                      style: context.styles.bodySmall.copyWith(
+                        color: context.colors.textSecondary,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHowToUseCard() {
+    final steps = [
+      {
+        'step': '1',
+        'title': 'Chọn loại QR Code',
+        'desc': 'URL, văn bản, liên hệ...'
+      },
+      {'step': '2', 'title': 'Nhập thông tin', 'desc': 'Nội dung cần mã hóa'},
+      {'step': '3', 'title': 'Tùy chỉnh', 'desc': 'Màu sắc và thiết kế'},
+      {'step': '4', 'title': 'Tạo & lưu', 'desc': 'Hoàn thành trong giây lát'},
+    ];
+
     return Container(
-      padding: const EdgeInsets.all(AppSizes.paddingLarge),
-      decoration: context.styles.cardDecoration,
+      padding: const EdgeInsets.all(AppSizes.paddingXLarge),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppSizes.radiusXLarge),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -217,18 +577,20 @@ class _IntroductionScreenState extends State<IntroductionScreen>
               Container(
                 padding: const EdgeInsets.all(AppSizes.paddingMedium),
                 decoration: BoxDecoration(
-                  gradient: context.colors.accentGradient,
+                  gradient: LinearGradient(
+                    colors: [context.colors.accent, context.colors.primary],
+                  ),
                   borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
                 ),
                 child: const Icon(
-                  Icons.star,
+                  Icons.play_circle_outline,
                   color: Colors.white,
-                  size: AppSizes.iconMedium,
+                  size: 24,
                 ),
               ),
               const SizedBox(width: AppSizes.paddingMedium),
               Text(
-                'Tính năng nổi bật',
+                'Cách sử dụng',
                 style: context.styles.headlineSmall.copyWith(
                   color: context.colors.text,
                   fontWeight: FontWeight.bold,
@@ -237,22 +599,58 @@ class _IntroductionScreenState extends State<IntroductionScreen>
             ],
           ),
           const SizedBox(height: AppSizes.paddingLarge),
-          ...qrCodeTypes.take(6).map((type) => Padding(
-                padding: const EdgeInsets.only(bottom: AppSizes.paddingMedium),
+          ...steps.map((step) => Padding(
+                padding: const EdgeInsets.only(bottom: AppSizes.paddingLarge),
                 child: Row(
                   children: [
-                    Icon(
-                      Icons.check_circle,
-                      color: context.colors.success,
-                      size: AppSizes.iconSmall,
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            context.colors.primary,
+                            context.colors.accent
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: context.colors.primary.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Text(
+                          step['step'] as String,
+                          style: context.styles.titleSmall.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                     ),
                     const SizedBox(width: AppSizes.paddingMedium),
                     Expanded(
-                      child: Text(
-                        'Tạo QR Code $type',
-                        style: context.styles.bodyMedium.copyWith(
-                          color: context.colors.text,
-                        ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            step['title'] as String,
+                            style: context.styles.titleMedium.copyWith(
+                              color: context.colors.text,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            step['desc'] as String,
+                            style: context.styles.bodyMedium.copyWith(
+                              color: context.colors.textSecondary,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
@@ -263,270 +661,226 @@ class _IntroductionScreenState extends State<IntroductionScreen>
     );
   }
 
-  Widget _buildHowToUseSection() {
+  Widget _buildBenefitsCard() {
+    final benefits = [
+      {
+        'icon': Icons.bolt,
+        'title': 'Nhanh chóng',
+        'desc': 'Tạo QR Code trong 3 giây'
+      },
+      {
+        'icon': Icons.design_services,
+        'title': 'Chuyên nghiệp',
+        'desc': 'Thiết kế đẹp mắt'
+      },
+      {
+        'icon': Icons.mobile_friendly,
+        'title': 'Dễ sử dụng',
+        'desc': 'Giao diện thân thiện'
+      },
+      {'icon': Icons.cloud_done, 'title': 'Đồng bộ', 'desc': 'Lưu trữ đám mây'},
+    ];
+
     return Container(
-      padding: const EdgeInsets.all(AppSizes.paddingLarge),
-      decoration: context.styles.cardDecoration,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSizes.paddingMedium),
-                decoration: BoxDecoration(
-                  gradient: context.colors.primaryGradient,
-                  borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                ),
-                child: const Icon(
-                  Icons.help_outline,
-                  color: Colors.white,
-                  size: AppSizes.iconMedium,
-                ),
-              ),
-              const SizedBox(width: AppSizes.paddingMedium),
-              Text(
-                'Hướng dẫn sử dụng',
-                style: context.styles.headlineSmall.copyWith(
-                  color: context.colors.text,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSizes.paddingLarge),
-          _buildStepItem('1', 'Chọn loại QR Code bạn muốn tạo'),
-          _buildStepItem('2', 'Nhập thông tin cần thiết'),
-          _buildStepItem('3', 'Tùy chỉnh giao diện và màu sắc'),
-          _buildStepItem('4', 'Tạo và lưu QR Code'),
-          _buildStepItem('5', 'Quét QR Code để sử dụng'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStepItem(String step, String description) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSizes.paddingMedium),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              color: context.colors.primary,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(
-              child: Text(
-                step,
-                style: context.styles.labelSmall.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: AppSizes.paddingMedium),
-          Expanded(
-            child: Text(
-              description,
-              style: context.styles.bodyMedium.copyWith(
-                color: context.colors.text,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFAQSection() {
-    return Container(
-      padding: const EdgeInsets.all(AppSizes.paddingLarge),
-      decoration: context.styles.cardDecoration,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSizes.paddingMedium),
-                decoration: BoxDecoration(
-                  gradient: context.colors.accentGradient,
-                  borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                ),
-                child: const Icon(
-                  Icons.question_answer,
-                  color: Colors.white,
-                  size: AppSizes.iconMedium,
-                ),
-              ),
-              const SizedBox(width: AppSizes.paddingMedium),
-              Text(
-                'Câu hỏi thường gặp',
-                style: context.styles.headlineSmall.copyWith(
-                  color: context.colors.text,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSizes.paddingLarge),
-          _buildFAQItem(
-            'QR Code động là gì?',
-            'QR Code động cho phép bạn thay đổi nội dung mà không cần tạo lại mã. Khi người dùng quét, họ sẽ được chuyển đến trang web với nội dung bạn đã cập nhật.',
-          ),
-          _buildFAQItem(
-            'Có thể tùy chỉnh màu sắc QR Code không?',
-            'Có! CodeCraft cung cấp nhiều palette màu đẹp mắt. Bạn có thể chọn từ 6 bộ màu khác nhau hoặc tùy chỉnh theo ý thích.',
-          ),
-          _buildFAQItem(
-            'Làm thế nào để xem thống kê QR Code?',
-            'Với tài khoản Premium, bạn có thể theo dõi số lượt quét, vị trí địa lý, thiết bị sử dụng và nhiều thông tin chi tiết khác.',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFAQItem(String question, String answer) {
-    return ExpansionTile(
-      title: Text(
-        question,
-        style: context.styles.titleMedium.copyWith(
-          color: context.colors.text,
-          fontWeight: FontWeight.w600,
+      padding: const EdgeInsets.all(AppSizes.paddingXLarge),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            context.colors.primary.withOpacity(0.1),
+            context.colors.accent.withOpacity(0.1),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(AppSizes.radiusXLarge),
+        border: Border.all(
+          color: context.colors.primary.withOpacity(0.2),
+          width: 1,
         ),
       ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Tại sao chọn CodeCraft?',
+            style: context.styles.headlineSmall.copyWith(
+              color: context.colors.text,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: AppSizes.paddingLarge),
+          ...benefits.map((benefit) => Padding(
+                padding: const EdgeInsets.only(bottom: AppSizes.paddingMedium),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(AppSizes.paddingSmall),
+                      decoration: BoxDecoration(
+                        color: context.colors.primary.withOpacity(0.1),
+                        borderRadius:
+                            BorderRadius.circular(AppSizes.radiusMedium),
+                      ),
+                      child: Icon(
+                        benefit['icon'] as IconData,
+                        color: context.colors.primary,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: AppSizes.paddingMedium),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            benefit['title'] as String,
+                            style: context.styles.titleSmall.copyWith(
+                              color: context.colors.text,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Text(
+                            benefit['desc'] as String,
+                            style: context.styles.bodySmall.copyWith(
+                              color: context.colors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              )),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatsCard() {
+    return Container(
+      padding: const EdgeInsets.all(AppSizes.paddingXLarge),
+      decoration: BoxDecoration(
+        color: context.colors.surface,
+        borderRadius: BorderRadius.circular(AppSizes.radiusXLarge),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Text(
+            'Thống kê ấn tượng',
+            style: context.styles.headlineSmall.copyWith(
+              color: context.colors.text,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: AppSizes.paddingLarge),
+          Row(
+            children: [
+              Expanded(
+                child: _buildStatItem('1M+', 'QR Code đã tạo', Icons.qr_code),
+              ),
+              Expanded(
+                child: _buildStatItem('50K+', 'Người dùng', Icons.people),
+              ),
+              Expanded(
+                child: _buildStatItem('99%', 'Độ chính xác', Icons.verified),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(String value, String label, IconData icon) {
+    return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSizes.paddingLarge,
-            0,
-            AppSizes.paddingLarge,
-            AppSizes.paddingMedium,
-          ),
-          child: Text(
-            answer,
-            style: context.styles.bodyMedium.copyWith(
-              color: context.colors.textSecondary,
-              height: 1.6,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSupportSection() {
-    return Container(
-      padding: const EdgeInsets.all(AppSizes.paddingLarge),
-      decoration: context.styles.cardDecoration,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSizes.paddingMedium),
-                decoration: BoxDecoration(
-                  gradient: context.colors.primaryGradient,
-                  borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-                ),
-                child: const Icon(
-                  Icons.support_agent,
-                  color: Colors.white,
-                  size: AppSizes.iconMedium,
-                ),
-              ),
-              const SizedBox(width: AppSizes.paddingMedium),
-              Text(
-                'Hỗ trợ & Liên hệ',
-                style: context.styles.headlineSmall.copyWith(
-                  color: context.colors.text,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSizes.paddingLarge),
-          _buildSupportItem(
-            Icons.email,
-            'Email',
-            'support@codecraft.com',
-          ),
-          _buildSupportItem(
-            Icons.web,
-            'Website',
-            'www.codecraft.com',
-          ),
-          _buildSupportItem(
-            Icons.chat,
-            'Live Chat',
-            'Có sẵn 24/7',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSupportItem(IconData icon, String title, String subtitle) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSizes.paddingMedium),
-      child: Row(
-        children: [
-          Icon(
-            icon,
-            color: context.colors.primary,
-            size: AppSizes.iconSmall,
-          ),
-          const SizedBox(width: AppSizes.paddingMedium),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: context.styles.titleSmall.copyWith(
-                    color: context.colors.text,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  subtitle,
-                  style: context.styles.bodySmall.copyWith(
-                    color: context.colors.textSecondary,
-                  ),
-                ),
+        Container(
+          padding: const EdgeInsets.all(AppSizes.paddingMedium),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                context.colors.primary.withOpacity(0.1),
+                context.colors.accent.withOpacity(0.1)
               ],
             ),
+            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
           ),
-        ],
-      ),
+          child: Icon(
+            icon,
+            color: context.colors.primary,
+            size: 24,
+          ),
+        ),
+        const SizedBox(height: AppSizes.paddingSmall),
+        Text(
+          value,
+          style: context.styles.headlineSmall.copyWith(
+            color: context.colors.primary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          label,
+          style: context.styles.bodySmall.copyWith(
+            color: context.colors.textSecondary,
+          ),
+          textAlign: TextAlign.center,
+        ),
+      ],
     );
   }
 
   Widget _buildGetStartedButton() {
     return Container(
       width: double.infinity,
-      height: AppSizes.buttonHeightLarge,
-      decoration: context.styles.primaryGradientDecoration,
+      height: 60,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [context.colors.primary, context.colors.accent],
+        ),
+        borderRadius: BorderRadius.circular(AppSizes.radiusXLarge),
+        boxShadow: [
+          BoxShadow(
+            color: context.colors.primary.withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+          borderRadius: BorderRadius.circular(AppSizes.radiusXLarge),
           onTap: () {
             AppGoRouter.instance.goToHome();
           },
-          child: Center(
-            child: Text(
-              'Bắt đầu ngay',
-              style: context.styles.labelLarge.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
+          child: Container(
+            width: double.infinity,
+            height: double.infinity,
+            child: Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.rocket_launch,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                  const SizedBox(width: AppSizes.paddingMedium),
+                  Text(
+                    'Bắt đầu ngay',
+                    style: context.styles.titleLarge.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
