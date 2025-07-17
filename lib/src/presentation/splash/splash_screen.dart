@@ -266,29 +266,15 @@ class _SplashScreenState extends State<SplashScreen>
                                   angle: _logoRotationAnimation.value,
                                   child: Opacity(
                                     opacity: _logoOpacityAnimation.value,
-                                    child: Container(
-                                      width: 140,
-                                      height: 140,
-                                      decoration: BoxDecoration(
-                                        gradient:
-                                            context.colors.primaryGradient,
-                                        borderRadius: BorderRadius.circular(
-                                            AppSizes.radiusXLarge),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: context.colors.primary
-                                                .withOpacity(0.3),
-                                            blurRadius: 20,
-                                            offset: const Offset(0, 10),
-                                          ),
-                                        ],
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(
+                                          AppSizes.radiusSmall),
+                                      child: Image.asset(
+                                        'assets/images/logo.png',
+                                        width: 140,
+                                        height: 140,
                                       ),
-                                      child: const Icon(
-                                        Icons.qr_code_scanner,
-                                        size: 70,
-                                        color: Colors.white,
-                                      ),
-                                    ),
+                                    ), 
                                   ),
                                 ),
                               );

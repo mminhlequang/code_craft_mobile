@@ -90,7 +90,10 @@ final goRouter = GoRouter(
     ),
     GoRoute(
       path: '/home',
-      builder: (context, state) => const HomeScreen(),
+      builder: (context, state) => BlocProvider(
+        create: (context) => HomeCubit(),
+        child: const HomeScreen(),
+      ),
     ),
   ],
 );

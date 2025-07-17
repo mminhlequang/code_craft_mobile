@@ -4,8 +4,8 @@ import 'package:internal_core/internal_core.dart';
 
 import '../../constants/constants.dart';
 import '../../utils/app_prefs.dart';
-import 'widgets/profile_header.dart';
-import 'widgets/settings_item.dart';
+import '../widgets/widgets.dart' hide IconButton;
+import '../premium/premium_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -14,7 +14,70 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends State<ProfileScreen>
+    with TickerProviderStateMixin {
+  late AnimationController _animationController;
+  late AnimationController _pulseController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 1200),
+      vsync: this,
+    );
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    );
+
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+    ));
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.3),
+      end: Offset.zero,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: const Interval(0.2, 0.8, curve: Curves.easeOutCubic),
+    ));
+
+    _scaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: const Interval(0.4, 1.0, curve: Curves.elasticOut),
+    ));
+
+    _pulseAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.1,
+    ).animate(CurvedAnimation(
+      parent: _pulseController,
+      curve: Curves.easeInOut,
+    ));
+
+    _animationController.forward();
+    _pulseController.repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _pulseController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion<SystemUiOverlayStyle>(
@@ -27,269 +90,498 @@ class _ProfileScreenState extends State<ProfileScreen> {
             AppPrefs.instance.isDarkTheme ? Brightness.light : Brightness.dark,
       ),
       child: Scaffold(
-        backgroundColor: context.colors.background,
-        body: SafeArea(
-          child: CustomScrollView(
-            slivers: [
-              // App Bar
-              SliverAppBar(
-                expandedHeight: 120,
-                floating: false,
-                pinned: true,
-                backgroundColor: context.colors.background,
-                elevation: 0,
-                flexibleSpace: FlexibleSpaceBar(
-                  title: Text(
-                    'Cá nhân',
-                    style: context.styles.headlineMedium.copyWith(
-                      color: context.colors.text,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  centerTitle: true,
-                ),
-                actions: [
-                  IconButton(
-                    onPressed: _showNotifications,
-                    icon: Icon(
-                      Icons.notifications_outlined,
-                      color: context.colors.text,
-                    ),
-                  ),
-                ],
-              ),
-
-              // Content
-              SliverPadding(
-                padding: const EdgeInsets.all(AppSizes.paddingLarge),
-                sliver: SliverList(
-                  delegate: SliverChildListDelegate([
-                    // Profile Header
-                    ProfileHeader(
-                      username: 'Nguyễn Văn A',
-                      email: 'nguyenvana@email.com',
-                      avatarUrl: null,
-                      isPremium: false,
-                      onEditProfile: _editProfile,
-                      onUpgradePremium: _upgradePremium,
-                    ),
-
-                    const SizedBox(height: AppSizes.paddingXLarge),
-
-                    // Quick Stats
-                    Container(
-                      padding: const EdgeInsets.all(AppSizes.paddingLarge),
-                      decoration: context.styles.cardDecoration,
-                      child: Row(
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: context.colors.backgroundGradient,
+          ),
+          child: SafeArea(
+            top: false,
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                // Hero App Bar
+                SliverAppBar(
+                  expandedHeight: 200,
+                  floating: false,
+                  pinned: true,
+                  backgroundColor: Colors.transparent,
+                  elevation: 0,
+                  flexibleSpace: FlexibleSpaceBar(
+                    background: Container(
+                      decoration: BoxDecoration(
+                        gradient: context.colors.primaryGradient,
+                        borderRadius: const BorderRadius.only(
+                          bottomLeft: Radius.circular(30),
+                          bottomRight: Radius.circular(30),
+                        ),
+                      ),
+                      child: Stack(
                         children: [
-                          Expanded(
-                            child: _buildStatItem(
-                              'QR Codes',
-                              '12',
-                              Icons.qr_code,
-                              context.colors.primary,
-                            ),
-                          ),
-                          Expanded(
-                            child: _buildStatItem(
-                              'Lượt quét',
-                              '156',
-                              Icons.qr_code_scanner,
-                              context.colors.secondary,
-                            ),
-                          ),
-                          Expanded(
-                            child: _buildStatItem(
-                              'Yêu thích',
-                              '8',
-                              Icons.favorite,
-                              context.colors.error,
+                          // Background particles
+                          ...List.generate(
+                              15, (index) => _buildParticle(index)),
+
+                          // Content
+                          Center(
+                            child: FadeTransition(
+                              opacity: _fadeAnimation,
+                              child: SlideTransition(
+                                position: _slideAnimation,
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    SizedBox(
+                                        height:
+                                            MediaQuery.of(context).padding.top),
+                                    // Avatar with gradient border
+                                    AnimatedBuilder(
+                                      animation: _pulseAnimation,
+                                      builder: (context, child) {
+                                        return Transform.scale(
+                                          scale: _pulseAnimation.value,
+                                          child: Container(
+                                            padding: const EdgeInsets.all(4),
+                                            decoration: BoxDecoration(
+                                              gradient: LinearGradient(
+                                                colors: [
+                                                  Colors.white.withOpacity(0.3),
+                                                  Colors.white.withOpacity(0.1),
+                                                ],
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(50),
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black
+                                                      .withOpacity(0.2),
+                                                  blurRadius: 20,
+                                                  offset: const Offset(0, 10),
+                                                ),
+                                              ],
+                                            ),
+                                            child: CircleAvatar(
+                                              radius: 40,
+                                              backgroundColor:
+                                                  Colors.white.withOpacity(0.2),
+                                              child: Icon(
+                                                Icons.person,
+                                                size: 40,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                    const SizedBox(height: 16),
+
+                                    // Username
+                                    Text(
+                                      'Nguyễn Văn A',
+                                      style: context.styles.headlineMedium
+                                          .copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        shadows: [
+                                          Shadow(
+                                            color:
+                                                Colors.black.withOpacity(0.3),
+                                            offset: const Offset(0, 2),
+                                            blurRadius: 4,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    // Email
+                                    Text(
+                                      'nguyenvana@email.com',
+                                      style: context.styles.bodyMedium.copyWith(
+                                        color: Colors.white.withOpacity(0.8),
+                                        shadows: [
+                                          Shadow(
+                                            color:
+                                                Colors.black.withOpacity(0.2),
+                                            offset: const Offset(0, 1),
+                                            blurRadius: 2,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             ),
                           ),
                         ],
                       ),
                     ),
+                    centerTitle: true,
+                  ),
+                ),
 
-                    const SizedBox(height: AppSizes.paddingLarge),
-
-                    // Settings Section
-                    Text(
-                      'Cài đặt',
-                      style: context.styles.titleLarge.copyWith(
-                        color: context.colors.text,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: AppSizes.paddingMedium),
-
-                    // Appearance
-                    SettingsItem(
-                      icon: Icons.palette,
-                      title: 'Giao diện',
-                      subtitle: AppPrefs.instance.isDarkTheme ? 'Tối' : 'Sáng',
-                      onTap: _toggleTheme,
-                      trailing: Switch(
-                        value: AppPrefs.instance.isDarkTheme,
-                        onChanged: (value) => _toggleTheme(),
-                        activeColor: context.colors.primary,
-                      ),
-                    ),
-
-                    // Color Palette
-                    SettingsItem(
-                      icon: Icons.color_lens,
-                      title: 'Bảng màu',
-                      subtitle: 'Thay đổi màu sắc chủ đạo',
-                      onTap: _changeColorPalette,
-                    ),
-
-                    // Language
-                    SettingsItem(
-                      icon: Icons.language,
-                      title: 'Ngôn ngữ',
-                      subtitle: 'Tiếng Việt',
-                      onTap: _changeLanguage,
-                    ),
-
-                    // Notifications
-                    SettingsItem(
-                      icon: Icons.notifications,
-                      title: 'Thông báo',
-                      subtitle: 'Cài đặt thông báo',
-                      onTap: _notificationSettings,
-                    ),
-
-                    const SizedBox(height: AppSizes.paddingLarge),
-
-                    // Features Section
-                    Text(
-                      'Tính năng',
-                      style: context.styles.titleLarge.copyWith(
-                        color: context.colors.text,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: AppSizes.paddingMedium),
-
-                    // Premium Features
-                    SettingsItem(
-                      icon: Icons.star,
-                      title: 'Premium',
-                      subtitle: 'Mở khóa tất cả tính năng',
-                      onTap: _upgradePremium,
-                      trailing: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppSizes.paddingSmall,
-                          vertical: AppSizes.paddingTiny,
-                        ),
-                        decoration: BoxDecoration(
-                          color: context.colors.primary,
-                          borderRadius:
-                              BorderRadius.circular(AppSizes.radiusSmall),
-                        ),
-                        child: Text(
-                          'Nâng cấp',
-                          style: context.styles.labelSmall.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                // Content
+                SliverPadding(
+                  padding: const EdgeInsets.all(AppSizes.paddingLarge),
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate([
+                      // Premium Banner
+                      FadeTransition(
+                        opacity: _fadeAnimation,
+                        child: SlideTransition(
+                          position: _slideAnimation,
+                          child: Padding(
+                            padding: const EdgeInsets.only(bottom: 24),
+                            child: PremiumBannerHoriz(
+                              title: 'Nâng cấp Premium',
+                              subtitle: 'Mở khóa tất cả tính năng nâng cao',
+                              buttonText: 'Nâng cấp ngay',
+                            ),
                           ),
                         ),
                       ),
-                    ),
 
-                    // Export Data
-                    SettingsItem(
-                      icon: Icons.download,
-                      title: 'Xuất dữ liệu',
-                      subtitle: 'Sao lưu QR Codes',
-                      onTap: _exportData,
-                    ),
-
-                    // Import Data
-                    SettingsItem(
-                      icon: Icons.upload,
-                      title: 'Nhập dữ liệu',
-                      subtitle: 'Khôi phục từ sao lưu',
-                      onTap: _importData,
-                    ),
-
-                    const SizedBox(height: AppSizes.paddingLarge),
-
-                    // Support Section
-                    Text(
-                      'Hỗ trợ',
-                      style: context.styles.titleLarge.copyWith(
-                        color: context.colors.text,
-                        fontWeight: FontWeight.bold,
+                      // Stats Section
+                      FadeTransition(
+                        opacity: _fadeAnimation,
+                        child: SlideTransition(
+                          position: _slideAnimation,
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 24),
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.08),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: _buildStatItem(
+                                    'QR Codes',
+                                    '12',
+                                    Icons.qr_code,
+                                    context.colors.primary,
+                                  ),
+                                ),
+                                Container(
+                                  width: 1,
+                                  height: 60,
+                                  color: context.colors.textSecondary
+                                      .withOpacity(0.2),
+                                ),
+                                Expanded(
+                                  child: _buildStatItem(
+                                    'Lượt quét',
+                                    '156',
+                                    Icons.qr_code_scanner,
+                                    context.colors.secondary,
+                                  ),
+                                ),
+                                Container(
+                                  width: 1,
+                                  height: 60,
+                                  color: context.colors.textSecondary
+                                      .withOpacity(0.2),
+                                ),
+                                Expanded(
+                                  child: _buildStatItem(
+                                    'Yêu thích',
+                                    '8',
+                                    Icons.favorite,
+                                    context.colors.error,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                       ),
+
+                      // Settings Section
+                      _buildSectionTitle('Cài đặt', 0.6),
+                      const SizedBox(height: 16),
+
+                      _buildSettingsCard([
+                        _buildSettingsItem(
+                          Icons.palette,
+                          'Giao diện',
+                          AppPrefs.instance.isDarkTheme ? 'Tối' : 'Sáng',
+                          trailing: Switch(
+                            value: AppPrefs.instance.isDarkTheme,
+                            onChanged: (value) => _toggleTheme(),
+                            activeColor: context.colors.primary,
+                          ),
+                          onTap: _toggleTheme,
+                        ),
+                        _buildSettingsItem(
+                          Icons.color_lens,
+                          'Bảng màu',
+                          'Thay đổi màu sắc chủ đạo',
+                          onTap: _changeColorPalette,
+                        ),
+                        _buildSettingsItem(
+                          Icons.language,
+                          'Ngôn ngữ',
+                          'Tiếng Việt',
+                          onTap: _changeLanguage,
+                        ),
+                        _buildSettingsItem(
+                          Icons.notifications,
+                          'Thông báo',
+                          'Cài đặt thông báo',
+                          onTap: _notificationSettings,
+                        ),
+                      ]),
+
+                      const SizedBox(height: 24),
+
+                      // Features Section
+                      _buildSectionTitle('Tính năng', 0.7),
+                      const SizedBox(height: 16),
+
+                      _buildSettingsCard([
+                        _buildSettingsItem(
+                          Icons.download,
+                          'Xuất dữ liệu',
+                          'Sao lưu QR Codes',
+                          onTap: _exportData,
+                        ),
+                        _buildSettingsItem(
+                          Icons.upload,
+                          'Nhập dữ liệu',
+                          'Khôi phục từ sao lưu',
+                          onTap: _importData,
+                        ),
+                        _buildSettingsItem(
+                          Icons.share,
+                          'Chia sẻ ứng dụng',
+                          'Giới thiệu cho bạn bè',
+                          onTap: _shareApp,
+                        ),
+                      ]),
+
+                      const SizedBox(height: 24),
+
+                      // Support Section
+                      _buildSectionTitle('Hỗ trợ', 0.8),
+                      const SizedBox(height: 16),
+
+                      _buildSettingsCard([
+                        _buildSettingsItem(
+                          Icons.help,
+                          'Trợ giúp & FAQ',
+                          'Câu hỏi thường gặp',
+                          onTap: _showHelp,
+                        ),
+                        _buildSettingsItem(
+                          Icons.feedback,
+                          'Gửi phản hồi',
+                          'Đánh giá ứng dụng',
+                          onTap: _sendFeedback,
+                        ),
+                        _buildSettingsItem(
+                          Icons.info,
+                          'Về ứng dụng',
+                          'Phiên bản 1.0.0',
+                          onTap: _showAbout,
+                        ),
+                      ]),
+
+                      const SizedBox(height: 24),
+
+                      // Account Section
+                      _buildSectionTitle('Tài khoản', 0.9),
+                      const SizedBox(height: 16),
+
+                      _buildSettingsCard([
+                        _buildSettingsItem(
+                          Icons.privacy_tip,
+                          'Chính sách bảo mật',
+                          'Thông tin bảo mật',
+                          onTap: _showPrivacyPolicy,
+                        ),
+                        _buildSettingsItem(
+                          Icons.description,
+                          'Điều khoản sử dụng',
+                          'Điều khoản và điều kiện',
+                          onTap: _showTerms,
+                        ),
+                        _buildSettingsItem(
+                          Icons.logout,
+                          'Đăng xuất',
+                          'Thoát khỏi tài khoản',
+                          onTap: _logout,
+                          textColor: context.colors.error,
+                        ),
+                      ]),
+
+                      const SizedBox(height: 32),
+                    ]),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildParticle(int index) {
+    return AnimatedBuilder(
+      animation: _pulseController,
+      builder: (context, child) {
+        return Positioned(
+          left: (index * 37) % 400.0,
+          top: (index * 73) % 200.0,
+          child: Transform.scale(
+            scale: _pulseAnimation.value,
+            child: Container(
+              width: 4,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.3),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSectionTitle(String title, double interval) {
+    return FadeTransition(
+      opacity: Tween<double>(
+        begin: 0.0,
+        end: 1.0,
+      ).animate(CurvedAnimation(
+        parent: _animationController,
+        curve: Interval(interval, interval + 0.2, curve: Curves.easeOut),
+      )),
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.3),
+          end: Offset.zero,
+        ).animate(CurvedAnimation(
+          parent: _animationController,
+          curve: Interval(interval, interval + 0.2, curve: Curves.easeOutCubic),
+        )),
+        child: Text(
+          title,
+          style: context.styles.titleLarge.copyWith(
+            color: context.colors.text,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingsCard(List<Widget> children) {
+    return FadeTransition(
+      opacity: _fadeAnimation,
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
+          ),
+          child: Column(
+            children: children.asMap().entries.map((entry) {
+              final index = entry.key;
+              final child = entry.value;
+              return Column(
+                children: [
+                  child,
+                  if (index < children.length - 1)
+                    Container(
+                      height: 1,
+                      margin: const EdgeInsets.symmetric(horizontal: 20),
+                      color: context.colors.textSecondary.withOpacity(0.1),
                     ),
-                    const SizedBox(height: AppSizes.paddingMedium),
+                ],
+              );
+            }).toList(),
+          ),
+        ),
+      ),
+    );
+  }
 
-                    // Help & FAQ
-                    SettingsItem(
-                      icon: Icons.help,
-                      title: 'Trợ giúp & FAQ',
-                      subtitle: 'Câu hỏi thường gặp',
-                      onTap: _showHelp,
-                    ),
-
-                    // Feedback
-                    SettingsItem(
-                      icon: Icons.feedback,
-                      title: 'Gửi phản hồi',
-                      subtitle: 'Đánh giá ứng dụng',
-                      onTap: _sendFeedback,
-                    ),
-
-                    // About
-                    SettingsItem(
-                      icon: Icons.info,
-                      title: 'Về ứng dụng',
-                      subtitle: 'Phiên bản 1.0.0',
-                      onTap: _showAbout,
-                    ),
-
-                    const SizedBox(height: AppSizes.paddingLarge),
-
-                    // Account Section
-                    Text(
-                      'Tài khoản',
-                      style: context.styles.titleLarge.copyWith(
-                        color: context.colors.text,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: AppSizes.paddingMedium),
-
-                    // Privacy Policy
-                    SettingsItem(
-                      icon: Icons.privacy_tip,
-                      title: 'Chính sách bảo mật',
-                      subtitle: 'Thông tin bảo mật',
-                      onTap: _showPrivacyPolicy,
-                    ),
-
-                    // Terms of Service
-                    SettingsItem(
-                      icon: Icons.description,
-                      title: 'Điều khoản sử dụng',
-                      subtitle: 'Điều khoản và điều kiện',
-                      onTap: _showTerms,
-                    ),
-
-                    // Logout
-                    SettingsItem(
-                      icon: Icons.logout,
-                      title: 'Đăng xuất',
-                      subtitle: 'Thoát khỏi tài khoản',
-                      onTap: _logout,
-                      textColor: context.colors.error,
-                    ),
-
-                    const SizedBox(height: AppSizes.paddingXLarge),
-                  ]),
+  Widget _buildSettingsItem(
+    IconData icon,
+    String title,
+    String subtitle, {
+    Widget? trailing,
+    VoidCallback? onTap,
+    Color? textColor,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  gradient: context.colors.primaryGradient,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  icon,
+                  color: Colors.white,
+                  size: 20,
                 ),
               ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: context.styles.titleMedium.copyWith(
+                        color: textColor ?? context.colors.text,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: context.styles.bodySmall.copyWith(
+                        color: textColor?.withOpacity(0.7) ??
+                            context.colors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (trailing != null) trailing,
+              if (trailing == null && onTap != null)
+                Icon(
+                  Icons.chevron_right,
+                  color: context.colors.textSecondary,
+                  size: 20,
+                ),
             ],
           ),
         ),
@@ -302,22 +594,31 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Column(
       children: [
         Container(
-          padding: const EdgeInsets.all(AppSizes.paddingMedium),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
+            gradient: LinearGradient(
+              colors: [
+                color.withOpacity(0.1),
+                color.withOpacity(0.05),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: color.withOpacity(0.2),
+              width: 1,
+            ),
           ),
           child: Icon(
             icon,
             color: color,
-            size: AppSizes.iconMedium,
+            size: 24,
           ),
         ),
-        const SizedBox(height: AppSizes.paddingSmall),
+        const SizedBox(height: 12),
         Text(
           value,
           style: context.styles.titleLarge.copyWith(
-            color: color,
+            color: context.colors.text,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -341,7 +642,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   void _upgradePremium() {
-    // TODO: Navigate to premium upgrade
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const PremiumScreen(),
+      ),
+    );
   }
 
   void _toggleTheme() {
@@ -367,6 +673,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _importData() {
     // TODO: Import data
+  }
+
+  void _shareApp() {
+    // TODO: Share app
   }
 
   void _showHelp() {

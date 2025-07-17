@@ -1,3 +1,5 @@
+import 'qr_code_types.dart';
+
 const String appName = "CodeCraft";
 
 const List<String> countriesAvailable = ['VN', 'BE', 'AU'];
@@ -18,22 +20,6 @@ const String keyLanguageCode = 'language_code';
 const String keyAccessToken = 'access_token';
 const String keyRefreshToken = 'refresh_token';
 
-// QR Code types
-const List<String> qrCodeTypes = [
-  'URL',
-  'Text',
-  'WiFi',
-  'Email',
-  'Phone',
-  'SMS',
-  'VCard',
-  'GeoLocation',
-  'Calendar',
-  'Social Media',
-  'Payment',
-  'App Store',
-  'Custom Content'
-];
 
 // Premium features
 const List<String> premiumFeatures = [
@@ -41,5 +27,8 @@ const List<String> premiumFeatures = [
   'Analytics & Statistics',
   'Custom Branding',
   'Advanced Templates',
-  'Priority Support'
+  'Priority Support',
+  'Bulk QR Generation',
+  'API Access',
+  'White Label Solution'
 ];

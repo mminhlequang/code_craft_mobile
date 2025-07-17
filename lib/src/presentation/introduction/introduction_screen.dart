@@ -353,7 +353,7 @@ class _IntroductionScreenState extends State<IntroductionScreen>
         return Transform.translate(
           offset: Offset(0, 50 * (1 - _cardAnimations[index].value)),
           child: Opacity(
-            opacity: _cardAnimations[index].value,
+            opacity: _cardAnimations[index].value>= 1 ? 1 : _cardAnimations[index].value,
             child: child,
           ),
         );

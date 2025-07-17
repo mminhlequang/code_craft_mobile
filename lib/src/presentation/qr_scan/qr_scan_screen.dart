@@ -18,12 +18,17 @@ class QrScanScreen extends StatefulWidget {
 
 class _QrScanScreenState extends State<QrScanScreen>
     with TickerProviderStateMixin {
+  late AnimationController _mainController;
   late AnimationController _scanAnimationController;
-  late Animation<double> _scanAnimation;
   late AnimationController _cornerAnimationController;
+  late AnimationController _pulseController;
+  late Animation<double> _mainAnimation;
+  late Animation<double> _scanAnimation;
   late Animation<double> _cornerAnimation;
+  late Animation<double> _pulseAnimation;
   bool _isScanning = false;
   String? _lastScannedData;
+  bool _isFlashOn = false;
 
   @override
   void initState() {
@@ -32,6 +37,16 @@ class _QrScanScreenState extends State<QrScanScreen>
   }
 
   void _initializeAnimations() {
+    _mainController = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    );
+
+    _mainAnimation = CurvedAnimation(
+      parent: _mainController,
+      curve: Curves.easeOutBack,
+    );
+
     _scanAnimationController = AnimationController(
       duration: const Duration(seconds: 2),
       vsync: this,
@@ -58,14 +73,31 @@ class _QrScanScreenState extends State<QrScanScreen>
       curve: Curves.easeInOut,
     ));
 
+    _pulseController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    );
+
+    _pulseAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _pulseController,
+      curve: Curves.easeInOut,
+    ));
+
+    _mainController.forward();
     _scanAnimationController.repeat();
     _cornerAnimationController.repeat(reverse: true);
+    _pulseController.repeat(reverse: true);
   }
 
   @override
   void dispose() {
+    _mainController.dispose();
     _scanAnimationController.dispose();
     _cornerAnimationController.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
@@ -74,11 +106,9 @@ class _QrScanScreenState extends State<QrScanScreen>
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle(
         statusBarColor: Colors.transparent,
-        statusBarIconBrightness:
-            AppPrefs.instance.isDarkTheme ? Brightness.light : Brightness.dark,
-        systemNavigationBarColor: context.colors.background,
-        systemNavigationBarIconBrightness:
-            AppPrefs.instance.isDarkTheme ? Brightness.light : Brightness.dark,
+        statusBarIconBrightness: Brightness.light,
+        systemNavigationBarColor: Colors.black,
+        systemNavigationBarIconBrightness: Brightness.light,
       ),
       child: Scaffold(
         backgroundColor: Colors.black,
@@ -91,223 +121,292 @@ class _QrScanScreenState extends State<QrScanScreen>
                 onCameraError: _handleCameraError,
               ),
 
-              // Top Bar
-              Positioned(
-                top: 0,
-                left: 0,
-                right: 0,
-                child: Container(
-                  padding: const EdgeInsets.all(AppSizes.paddingLarge),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.black.withOpacity(0.7),
-                        Colors.transparent,
-                      ],
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      AnimatedContainer(
-                        duration: AppStyles.instance.animationFast,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius:
-                                BorderRadius.circular(AppSizes.radiusMedium),
-                            onTap: () => Navigator.pop(context),
-                            child: Container(
-                              padding:
-                                  const EdgeInsets.all(AppSizes.paddingSmall),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(
-                                    AppSizes.radiusMedium),
-                              ),
-                              child: const Icon(
-                                Icons.arrow_back,
-                                color: Colors.white,
-                                size: 28,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                      Expanded(
-                        child: Text(
-                          'Quét QR Code',
-                          style: context.styles.headlineSmall.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                      AnimatedContainer(
-                        duration: AppStyles.instance.animationFast,
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius:
-                                BorderRadius.circular(AppSizes.radiusMedium),
-                            onTap: _toggleFlash,
-                            child: Container(
-                              padding:
-                                  const EdgeInsets.all(AppSizes.paddingSmall),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.2),
-                                borderRadius: BorderRadius.circular(
-                                    AppSizes.radiusMedium),
-                              ),
-                              child: Icon(
-                                _isFlashOn ? Icons.flash_on : Icons.flash_off,
-                                color: Colors.white,
-                                size: 28,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+              // Hero App Bar
+              _buildHeroAppBar(),
 
               // Scan Frame
-              Center(
-                child: AnimatedBuilder(
-                  animation: _cornerAnimation,
-                  builder: (context, child) {
-                    return Container(
-                      width: 250,
-                      height: 250,
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: context.colors.primary
-                              .withOpacity(0.8 + _cornerAnimation.value * 0.2),
-                          width: 2,
-                        ),
-                        borderRadius:
-                            BorderRadius.circular(AppSizes.radiusMedium),
-                      ),
-                      child: Stack(
-                        children: [
-                          // Corner indicators
-                          Positioned(
-                            top: 0,
-                            left: 0,
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 300),
-                              width: 20,
-                              height: 20,
-                              decoration: BoxDecoration(
-                                color: context.colors.primary,
-                                borderRadius: const BorderRadius.only(
-                                  topLeft: Radius.circular(4),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            top: 0,
-                            right: 0,
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 300),
-                              width: 20,
-                              height: 20,
-                              decoration: BoxDecoration(
-                                color: context.colors.primary,
-                                borderRadius: const BorderRadius.only(
-                                  topRight: Radius.circular(4),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            bottom: 0,
-                            left: 0,
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 300),
-                              width: 20,
-                              height: 20,
-                              decoration: BoxDecoration(
-                                color: context.colors.primary,
-                                borderRadius: const BorderRadius.only(
-                                  bottomLeft: Radius.circular(4),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Positioned(
-                            bottom: 0,
-                            right: 0,
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 300),
-                              width: 20,
-                              height: 20,
-                              decoration: BoxDecoration(
-                                color: context.colors.primary,
-                                borderRadius: const BorderRadius.only(
-                                  bottomRight: Radius.circular(4),
-                                ),
-                              ),
-                            ),
-                          ),
+              _buildScanFrame(),
 
-                          // Scanning line
-                          if (_isScanning)
-                            Positioned(
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              child: AnimatedBuilder(
-                                animation: _scanAnimation,
-                                builder: (context, child) {
-                                  return Transform.translate(
-                                    offset: Offset(
-                                      0,
-                                      _scanAnimation.value * 250,
-                                    ),
-                                    child: Container(
-                                      height: 2,
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            Colors.transparent,
-                                            context.colors.primary,
-                                            Colors.transparent,
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                        ],
+              // Bottom Instructions
+              _buildBottomInstructions(),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeroAppBar() {
+    return FadeTransition(
+      opacity: _mainAnimation,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, -0.5),
+          end: Offset.zero,
+        ).animate(_mainAnimation),
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Colors.black.withOpacity(0.8),
+                Colors.transparent,
+              ],
+            ),
+          ),
+          child: Row(
+            children: [
+              // Back Button
+              // GestureDetector(
+              //   onTap: () => Navigator.pop(context),
+              //   child: Container(
+              //     width: 45,
+              //     height: 45,
+              //     decoration: BoxDecoration(
+              //       color: Colors.white.withOpacity(0.2),
+              //       borderRadius: BorderRadius.circular(15),
+              //       border: Border.all(
+              //         color: Colors.white.withOpacity(0.3),
+              //         width: 1,
+              //       ),
+              //     ),
+              //     child: const Icon(
+              //       Icons.arrow_back_ios_new,
+              //       color: Colors.white,
+              //       size: 20,
+              //     ),
+              //   ),
+              // ),
+
+              SizedBox(
+                width: 45,
+                height: 45,
+              ),
+
+              const SizedBox(width: 15),
+
+              // Title
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Quét QR Code',
+                      style: context.styles.headlineSmall.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
                       ),
-                    );
-                  },
+                    ),
+                    Text(
+                      'Đặt QR Code vào khung hình',
+                      style: context.styles.bodyMedium.copyWith(
+                        color: Colors.white.withOpacity(0.8),
+                      ),
+                    ),
+                  ],
                 ),
               ),
 
-              // Bottom Instructions
-              Positioned(
-                bottom: 0,
-                left: 0,
-                right: 0,
+              // Flash Button
+              GestureDetector(
+                onTap: _toggleFlash,
                 child: Container(
-                  padding: const EdgeInsets.all(AppSizes.paddingLarge),
+                  width: 45,
+                  height: 45,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.transparent,
-                        Colors.black.withOpacity(0.7),
-                      ],
+                    color: _isFlashOn
+                        ? context.colors.primary.withOpacity(0.8)
+                        : Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(15),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.3),
+                      width: 1,
+                    ),
+                  ),
+                  child: Icon(
+                    _isFlashOn ? Icons.flash_on : Icons.flash_off,
+                    color: Colors.white,
+                    size: 22,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScanFrame() {
+    return Center(
+      child: AnimatedBuilder(
+        animation: Listenable.merge([_cornerAnimation, _pulseAnimation]),
+        builder: (context, child) {
+          return Container(
+            width: 280,
+            height: 280,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(25),
+              boxShadow: [
+                BoxShadow(
+                  color: context.colors.primary
+                      .withOpacity(0.3 * _pulseAnimation.value),
+                  blurRadius: 30,
+                  spreadRadius: 5,
+                ),
+              ],
+            ),
+            child: Stack(
+              children: [
+                // Main scan frame
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: context.colors.primary
+                          .withOpacity(0.8 + _cornerAnimation.value * 0.2),
+                      width: 3,
+                    ),
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                ),
+
+                // Corner indicators
+                _buildCornerIndicator(Alignment.topLeft),
+                _buildCornerIndicator(Alignment.topRight),
+                _buildCornerIndicator(Alignment.bottomLeft),
+                _buildCornerIndicator(Alignment.bottomRight),
+
+                // Scanning line
+                if (_isScanning)
+                  Positioned(
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    child: AnimatedBuilder(
+                      animation: _scanAnimation,
+                      builder: (context, child) {
+                        return Transform.translate(
+                          offset: Offset(0, _scanAnimation.value * 280),
+                          child: Container(
+                            height: 3,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  Colors.transparent,
+                                  context.colors.primary,
+                                  Colors.transparent,
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+
+                // Center QR icon
+                Center(
+                  child: Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(15),
+                    ),
+                    child: Icon(
+                      Icons.qr_code_scanner,
+                      color: Colors.white.withOpacity(0.7),
+                      size: 30,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildCornerIndicator(Alignment alignment) {
+    return Positioned(
+      top: alignment == Alignment.topLeft || alignment == Alignment.topRight
+          ? 0
+          : null,
+      bottom: alignment == Alignment.bottomLeft ||
+              alignment == Alignment.bottomRight
+          ? 0
+          : null,
+      left: alignment == Alignment.topLeft || alignment == Alignment.bottomLeft
+          ? 0
+          : null,
+      right:
+          alignment == Alignment.topRight || alignment == Alignment.bottomRight
+              ? 0
+              : null,
+      child: Container(
+        width: 25,
+        height: 25,
+        decoration: BoxDecoration(
+          color: context.colors.primary,
+          borderRadius: BorderRadius.only(
+            topLeft: alignment == Alignment.topLeft
+                ? const Radius.circular(8)
+                : Radius.zero,
+            topRight: alignment == Alignment.topRight
+                ? const Radius.circular(8)
+                : Radius.zero,
+            bottomLeft: alignment == Alignment.bottomLeft
+                ? const Radius.circular(8)
+                : Radius.zero,
+            bottomRight: alignment == Alignment.bottomRight
+                ? const Radius.circular(8)
+                : Radius.zero,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomInstructions() {
+    return Positioned(
+      bottom: 0,
+      left: 0,
+      right: 0,
+      child: FadeTransition(
+        opacity: _mainAnimation,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.5),
+            end: Offset.zero,
+          ).animate(_mainAnimation),
+          child: Container(
+            padding: const EdgeInsets.all(25),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.transparent,
+                  Colors.black.withOpacity(0.8),
+                ],
+              ),
+            ),
+            child: Column(
+              children: [
+                // Instructions
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.2),
+                      width: 1,
                     ),
                   ),
                   child: Column(
@@ -316,11 +415,11 @@ class _QrScanScreenState extends State<QrScanScreen>
                         'Đặt QR Code vào khung hình',
                         style: context.styles.bodyLarge.copyWith(
                           color: Colors.white,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w600,
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: AppSizes.paddingMedium),
+                      const SizedBox(height: 8),
                       Text(
                         'QR Code sẽ được quét tự động',
                         style: context.styles.bodyMedium.copyWith(
@@ -328,34 +427,35 @@ class _QrScanScreenState extends State<QrScanScreen>
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: AppSizes.paddingLarge),
-
-                      // Action Buttons
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          _buildActionButton(
-                            icon: Icons.photo_library,
-                            label: 'Thư viện',
-                            onTap: _pickFromGallery,
-                          ),
-                          _buildActionButton(
-                            icon: Icons.history,
-                            label: 'Lịch sử',
-                            onTap: _showHistory,
-                          ),
-                          _buildActionButton(
-                            icon: Icons.settings,
-                            label: 'Cài đặt',
-                            onTap: _showSettings,
-                          ),
-                        ],
-                      ),
                     ],
                   ),
                 ),
-              ),
-            ],
+
+                const SizedBox(height: 25),
+
+                // Action Buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildActionButton(
+                      icon: Icons.photo_library,
+                      label: 'Thư viện',
+                      onTap: _pickFromGallery,
+                    ),
+                    _buildActionButton(
+                      icon: Icons.history,
+                      label: 'Lịch sử',
+                      onTap: _showHistory,
+                    ),
+                    _buildActionButton(
+                      icon: Icons.settings,
+                      label: 'Cài đặt',
+                      onTap: _showSettings,
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -369,28 +469,30 @@ class _QrScanScreenState extends State<QrScanScreen>
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: AppStyles.instance.animationFast,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+        decoration: BoxDecoration(
+          color: Colors.white.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.2),
+            width: 1,
+          ),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              padding: const EdgeInsets.all(AppSizes.paddingMedium),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(AppSizes.radiusMedium),
-              ),
-              child: Icon(
-                icon,
-                color: Colors.white,
-                size: AppSizes.iconMedium,
-              ),
+            Icon(
+              icon,
+              color: Colors.white,
+              size: 24,
             ),
-            const SizedBox(height: AppSizes.paddingSmall),
+            const SizedBox(height: 8),
             Text(
               label,
-              style: context.styles.labelSmall.copyWith(
+              style: context.styles.bodySmall.copyWith(
                 color: Colors.white,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
@@ -469,6 +571,4 @@ class _QrScanScreenState extends State<QrScanScreen>
   void _showSettings() {
     // TODO: Show camera settings
   }
-
-  bool _isFlashOn = false;
 }

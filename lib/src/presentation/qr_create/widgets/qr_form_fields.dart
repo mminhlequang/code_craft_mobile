@@ -2,9 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:internal_core/internal_core.dart';
 
 import '../../../constants/constants.dart';
+import '../../../constants/qr_code_types.dart';
+import '../../widgets/modern_input_field.dart';
+import 'qr_form_fields_extended.dart';
 
 class QrFormFields extends StatelessWidget {
-  final String qrType;
+  final QrCodeType qrType;
   final Map<String, TextEditingController> controllers;
   final Function(String, String) onDataChanged;
 
@@ -18,30 +21,54 @@ class QrFormFields extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     switch (qrType) {
-      case 'URL':
+      // Cơ bản
+      case QrCodeType.websiteUrl:
         return _buildUrlFields(context);
-      case 'Text':
+      case QrCodeType.textPlainText:
         return _buildTextFields(context);
-      case 'WiFi':
+      case QrCodeType.wifiAccess:
         return _buildWiFiFields(context);
-      case 'Email':
+      case QrCodeType.emailContact:
         return _buildEmailFields(context);
-      case 'Phone':
+      case QrCodeType.phoneNumber:
         return _buildPhoneFields(context);
-      case 'SMS':
+      case QrCodeType.smsMessage:
         return _buildSmsFields(context);
-      case 'VCard':
+      case QrCodeType.vcardContact:
         return _buildVCardFields(context);
-      case 'GeoLocation':
+      case QrCodeType.locationMap:
         return _buildGeoLocationFields(context);
-      case 'Calendar':
+      case QrCodeType.eventCalendar:
         return _buildCalendarFields(context);
-      case 'Social Media':
+
+      // Liên lạc & Danh bạ
+      case QrCodeType.socialMedia:
         return _buildSocialMediaFields(context);
-      case 'Payment':
-        return _buildPaymentFields(context);
-      case 'App Store':
+      case QrCodeType.appStoreDownload:
         return _buildAppStoreFields(context);
+
+      // Doanh nghiệp & Thương mại
+      case QrCodeType.restaurantMenu:
+        return _buildRestaurantMenuFields(context);
+      case QrCodeType.paymentQr:
+        return _buildPaymentFields(context);
+      case QrCodeType.productInfo:
+        return _buildProductFields(context);
+      case QrCodeType.businessCard:
+        return _buildBusinessCardFields(context);
+      case QrCodeType.multiUrl:
+        return _buildMultiUrlFields(context);
+
+      // Nội dung & Tài liệu
+      case QrCodeType.pdfDocument:
+        return _buildPdfDocumentFields(context);
+      case QrCodeType.imageGallery:
+        return _buildImageGalleryFields(context);
+      case QrCodeType.videoContent:
+        return _buildVideoContentFields(context);
+      case QrCodeType.cryptoWallet:
+        return _buildCryptoWalletFields(context);
+
       default:
         return _buildDefaultFields(context);
     }
@@ -51,22 +78,15 @@ class QrFormFields extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Thông tin URL',
-          style: context.styles.titleMedium.copyWith(
-            color: context.colors.text,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['url'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'URL',
-            hintText: 'https://example.com',
-            prefixIcon: const Icon(Icons.link),
-          ),
+        _buildSectionHeader(context, 'Thông tin URL', Icons.link),
+        const SizedBox(height: 16),
+        ModernInputField(
+          controller: controllers['url']!,
+          label: 'URL',
+          hint: 'https://example.com',
+          prefixIcon: Icons.link,
           keyboardType: TextInputType.url,
+          isRequired: true,
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'Vui lòng nhập URL';
@@ -86,22 +106,15 @@ class QrFormFields extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Nội dung văn bản',
-          style: context.styles.titleMedium.copyWith(
-            color: context.colors.text,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['text'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Văn bản',
-            hintText: 'Nhập nội dung văn bản...',
-            prefixIcon: const Icon(Icons.text_fields),
-          ),
+        _buildSectionHeader(context, 'Nội dung văn bản', Icons.text_fields),
+        const SizedBox(height: 16),
+        ModernInputField(
+          controller: controllers['text']!,
+          label: 'Văn bản',
+          hint: 'Nhập nội dung văn bản...',
+          prefixIcon: Icons.text_fields,
           maxLines: 3,
+          isRequired: true,
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'Vui lòng nhập nội dung';
@@ -118,21 +131,14 @@ class QrFormFields extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Thông tin WiFi',
-          style: context.styles.titleMedium.copyWith(
-            color: context.colors.text,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['ssid'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Tên mạng WiFi (SSID)',
-            hintText: 'Nhập tên mạng WiFi',
-            prefixIcon: const Icon(Icons.wifi),
-          ),
+        _buildSectionHeader(context, 'Thông tin WiFi', Icons.wifi),
+        const SizedBox(height: 16),
+        ModernInputField(
+          controller: controllers['ssid']!,
+          label: 'Tên mạng WiFi (SSID)',
+          hint: 'Nhập tên mạng WiFi',
+          prefixIcon: Icons.wifi,
+          isRequired: true,
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'Vui lòng nhập tên mạng WiFi';
@@ -141,26 +147,26 @@ class QrFormFields extends StatelessWidget {
           },
           onChanged: (value) => onDataChanged('ssid', value),
         ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['password'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Mật khẩu',
-            hintText: 'Nhập mật khẩu WiFi',
-            prefixIcon: const Icon(Icons.lock),
-          ),
+        ModernInputField(
+          controller: controllers['password']!,
+          label: 'Mật khẩu',
+          hint: 'Nhập mật khẩu WiFi',
+          prefixIcon: Icons.lock,
           obscureText: true,
           onChanged: (value) => onDataChanged('password', value),
         ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['encryption'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Loại mã hóa',
-            hintText: 'WPA, WEP, nopass',
-            prefixIcon: const Icon(Icons.security),
-          ),
-          onChanged: (value) => onDataChanged('encryption', value),
+        ModernDropdownField(
+          label: 'Loại mã hóa',
+          hint: 'Chọn loại mã hóa',
+          prefixIcon: Icons.security,
+          options: ['WPA', 'WEP', 'nopass'],
+          value: controllers['encryption']!.text.isEmpty
+              ? 'WPA'
+              : controllers['encryption']!.text,
+          onChanged: (value) {
+            controllers['encryption']!.text = value ?? 'WPA';
+            onDataChanged('encryption', value ?? 'WPA');
+          },
         ),
       ],
     );
@@ -170,22 +176,15 @@ class QrFormFields extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Thông tin Email',
-          style: context.styles.titleMedium.copyWith(
-            color: context.colors.text,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['email'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Địa chỉ Email',
-            hintText: 'example@email.com',
-            prefixIcon: const Icon(Icons.email),
-          ),
+        _buildSectionHeader(context, 'Thông tin Email', Icons.email),
+        const SizedBox(height: 16),
+        ModernInputField(
+          controller: controllers['email']!,
+          label: 'Địa chỉ Email',
+          hint: 'example@email.com',
+          prefixIcon: Icons.email,
           keyboardType: TextInputType.emailAddress,
+          isRequired: true,
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'Vui lòng nhập email';
@@ -197,24 +196,18 @@ class QrFormFields extends StatelessWidget {
           },
           onChanged: (value) => onDataChanged('email', value),
         ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['subject'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Tiêu đề',
-            hintText: 'Tiêu đề email',
-            prefixIcon: const Icon(Icons.subject),
-          ),
+        ModernInputField(
+          controller: controllers['subject']!,
+          label: 'Tiêu đề',
+          hint: 'Tiêu đề email',
+          prefixIcon: Icons.subject,
           onChanged: (value) => onDataChanged('subject', value),
         ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['body'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Nội dung',
-            hintText: 'Nội dung email',
-            prefixIcon: const Icon(Icons.message),
-          ),
+        ModernInputField(
+          controller: controllers['body']!,
+          label: 'Nội dung',
+          hint: 'Nội dung email',
+          prefixIcon: Icons.message,
           maxLines: 3,
           onChanged: (value) => onDataChanged('body', value),
         ),
@@ -226,22 +219,15 @@ class QrFormFields extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Thông tin số điện thoại',
-          style: context.styles.titleMedium.copyWith(
-            color: context.colors.text,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['phone'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Số điện thoại',
-            hintText: '+84 123 456 789',
-            prefixIcon: const Icon(Icons.phone),
-          ),
+        _buildSectionHeader(context, 'Thông tin số điện thoại', Icons.phone),
+        const SizedBox(height: 16),
+        ModernInputField(
+          controller: controllers['phone']!,
+          label: 'Số điện thoại',
+          hint: '+84 123 456 789',
+          prefixIcon: Icons.phone,
           keyboardType: TextInputType.phone,
+          isRequired: true,
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'Vui lòng nhập số điện thoại';
@@ -258,22 +244,15 @@ class QrFormFields extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Thông tin SMS',
-          style: context.styles.titleMedium.copyWith(
-            color: context.colors.text,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['phone'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Số điện thoại',
-            hintText: '+84 123 456 789',
-            prefixIcon: const Icon(Icons.phone),
-          ),
+        _buildSectionHeader(context, 'Thông tin SMS', Icons.sms),
+        const SizedBox(height: 16),
+        ModernInputField(
+          controller: controllers['phone']!,
+          label: 'Số điện thoại',
+          hint: '+84 123 456 789',
+          prefixIcon: Icons.phone,
           keyboardType: TextInputType.phone,
+          isRequired: true,
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'Vui lòng nhập số điện thoại';
@@ -282,14 +261,11 @@ class QrFormFields extends StatelessWidget {
           },
           onChanged: (value) => onDataChanged('phone', value),
         ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['message'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Nội dung tin nhắn',
-            hintText: 'Nhập nội dung tin nhắn...',
-            prefixIcon: const Icon(Icons.sms),
-          ),
+        ModernInputField(
+          controller: controllers['message']!,
+          label: 'Nội dung tin nhắn',
+          hint: 'Nhập nội dung tin nhắn...',
+          prefixIcon: Icons.message,
           maxLines: 3,
           onChanged: (value) => onDataChanged('message', value),
         ),
@@ -301,59 +277,43 @@ class QrFormFields extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Thông tin danh bạ',
-          style: context.styles.titleMedium.copyWith(
-            color: context.colors.text,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['name'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Họ và tên',
-            hintText: 'Nguyễn Văn A',
-            prefixIcon: const Icon(Icons.person),
-          ),
+        _buildSectionHeader(context, 'Thông tin liên hệ', Icons.contact_phone),
+        const SizedBox(height: 16),
+        ModernInputField(
+          controller: controllers['name']!,
+          label: 'Họ và tên',
+          hint: 'Nhập họ và tên',
+          prefixIcon: Icons.person,
+          isRequired: true,
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'Vui lòng nhập họ tên';
+              return 'Vui lòng nhập họ và tên';
             }
             return null;
           },
           onChanged: (value) => onDataChanged('name', value),
         ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['phone'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Số điện thoại',
-            hintText: '+84 123 456 789',
-            prefixIcon: const Icon(Icons.phone),
-          ),
+        ModernInputField(
+          controller: controllers['phone']!,
+          label: 'Số điện thoại',
+          hint: '+84 123 456 789',
+          prefixIcon: Icons.phone,
           keyboardType: TextInputType.phone,
           onChanged: (value) => onDataChanged('phone', value),
         ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['email'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Email',
-            hintText: 'example@email.com',
-            prefixIcon: const Icon(Icons.email),
-          ),
+        ModernInputField(
+          controller: controllers['email']!,
+          label: 'Email',
+          hint: 'example@email.com',
+          prefixIcon: Icons.email,
           keyboardType: TextInputType.emailAddress,
           onChanged: (value) => onDataChanged('email', value),
         ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['company'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Công ty',
-            hintText: 'Tên công ty',
-            prefixIcon: const Icon(Icons.business),
-          ),
+        ModernInputField(
+          controller: controllers['company']!,
+          label: 'Công ty',
+          hint: 'Tên công ty',
+          prefixIcon: Icons.business,
           onChanged: (value) => onDataChanged('company', value),
         ),
       ],
@@ -364,61 +324,43 @@ class QrFormFields extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Thông tin vị trí',
-          style: context.styles.titleMedium.copyWith(
-            color: context.colors.text,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['latitude'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Vĩ độ',
-            hintText: '10.762622',
-            prefixIcon: const Icon(Icons.location_on),
-          ),
+        _buildSectionHeader(context, 'Thông tin vị trí', Icons.location_on),
+        const SizedBox(height: 16),
+        ModernInputField(
+          controller: controllers['latitude']!,
+          label: 'Vĩ độ',
+          hint: '10.762622',
+          prefixIcon: Icons.gps_fixed,
           keyboardType: TextInputType.number,
+          isRequired: true,
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'Vui lòng nhập vĩ độ';
-            }
-            if (double.tryParse(value) == null) {
-              return 'Vĩ độ không hợp lệ';
             }
             return null;
           },
           onChanged: (value) => onDataChanged('latitude', value),
         ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['longitude'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Kinh độ',
-            hintText: '106.660172',
-            prefixIcon: const Icon(Icons.location_on),
-          ),
+        ModernInputField(
+          controller: controllers['longitude']!,
+          label: 'Kinh độ',
+          hint: '106.660172',
+          prefixIcon: Icons.gps_fixed,
           keyboardType: TextInputType.number,
+          isRequired: true,
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'Vui lòng nhập kinh độ';
-            }
-            if (double.tryParse(value) == null) {
-              return 'Kinh độ không hợp lệ';
             }
             return null;
           },
           onChanged: (value) => onDataChanged('longitude', value),
         ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['label'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Nhãn vị trí',
-            hintText: 'Tên địa điểm',
-            prefixIcon: const Icon(Icons.label),
-          ),
+        ModernInputField(
+          controller: controllers['label']!,
+          label: 'Nhãn vị trí',
+          hint: 'Tên địa điểm',
+          prefixIcon: Icons.label,
           onChanged: (value) => onDataChanged('label', value),
         ),
       ],
@@ -429,68 +371,49 @@ class QrFormFields extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Thông tin sự kiện',
-          style: context.styles.titleMedium.copyWith(
-            color: context.colors.text,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['title'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Tiêu đề sự kiện',
-            hintText: 'Tên sự kiện',
-            prefixIcon: const Icon(Icons.event),
-          ),
+        _buildSectionHeader(context, 'Thông tin sự kiện', Icons.calendar_today),
+        const SizedBox(height: 16),
+        ModernInputField(
+          controller: controllers['title']!,
+          label: 'Tiêu đề sự kiện',
+          hint: 'Nhập tiêu đề sự kiện',
+          prefixIcon: Icons.event,
+          isRequired: true,
           validator: (value) {
             if (value == null || value.isEmpty) {
-              return 'Vui lòng nhập tiêu đề';
+              return 'Vui lòng nhập tiêu đề sự kiện';
             }
             return null;
           },
           onChanged: (value) => onDataChanged('title', value),
         ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['description'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Mô tả',
-            hintText: 'Mô tả sự kiện',
-            prefixIcon: const Icon(Icons.description),
-          ),
-          maxLines: 2,
+        ModernInputField(
+          controller: controllers['description']!,
+          label: 'Mô tả',
+          hint: 'Mô tả sự kiện',
+          prefixIcon: Icons.description,
+          maxLines: 3,
           onChanged: (value) => onDataChanged('description', value),
         ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['location'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Địa điểm',
-            hintText: 'Địa điểm tổ chức',
-            prefixIcon: const Icon(Icons.location_on),
-          ),
+        ModernInputField(
+          controller: controllers['location']!,
+          label: 'Địa điểm',
+          hint: 'Địa điểm tổ chức',
+          prefixIcon: Icons.location_on,
           onChanged: (value) => onDataChanged('location', value),
         ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['startDate'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Ngày bắt đầu',
-            hintText: '2024-01-01 09:00',
-            prefixIcon: const Icon(Icons.schedule),
-          ),
+        ModernInputField(
+          controller: controllers['startDate']!,
+          label: 'Ngày bắt đầu',
+          hint: 'YYYY-MM-DD HH:MM',
+          prefixIcon: Icons.schedule,
           onChanged: (value) => onDataChanged('startDate', value),
         ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['endDate'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Ngày kết thúc',
-            hintText: '2024-01-01 17:00',
-            prefixIcon: const Icon(Icons.schedule),
-          ),
+        ModernInputField(
+          controller: controllers['endDate']!,
+          label: 'Ngày kết thúc',
+          hint: 'YYYY-MM-DD HH:MM',
+          prefixIcon: Icons.schedule,
           onChanged: (value) => onDataChanged('endDate', value),
         ),
       ],
@@ -501,37 +424,35 @@ class QrFormFields extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Thông tin mạng xã hội',
-          style: context.styles.titleMedium.copyWith(
-            color: context.colors.text,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['platform'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Nền tảng',
-            hintText: 'Facebook, Instagram, Twitter...',
-            prefixIcon: const Icon(Icons.share),
-          ),
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Vui lòng nhập nền tảng';
-            }
-            return null;
+        _buildSectionHeader(context, 'Thông tin mạng xã hội', Icons.share),
+        const SizedBox(height: 16),
+        ModernDropdownField(
+          label: 'Nền tảng',
+          hint: 'Chọn nền tảng',
+          prefixIcon: Icons.share,
+          options: [
+            'Facebook',
+            'Instagram',
+            'Twitter',
+            'LinkedIn',
+            'YouTube',
+            'TikTok'
+          ],
+          value: controllers['platform']!.text.isEmpty
+              ? null
+              : controllers['platform']!.text,
+          onChanged: (value) {
+            controllers['platform']!.text = value ?? '';
+            onDataChanged('platform', value ?? '');
           },
-          onChanged: (value) => onDataChanged('platform', value),
+          isRequired: true,
         ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['username'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Tên người dùng',
-            hintText: '@username',
-            prefixIcon: const Icon(Icons.person),
-          ),
+        ModernInputField(
+          controller: controllers['username']!,
+          label: 'Tên người dùng',
+          hint: '@username',
+          prefixIcon: Icons.person,
+          isRequired: true,
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'Vui lòng nhập tên người dùng';
@@ -548,51 +469,42 @@ class QrFormFields extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Thông tin thanh toán',
-          style: context.styles.titleMedium.copyWith(
-            color: context.colors.text,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['amount'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Số tiền',
-            hintText: '100000',
-            prefixIcon: const Icon(Icons.attach_money),
-          ),
+        _buildSectionHeader(context, 'Thông tin thanh toán', Icons.payment),
+        const SizedBox(height: 16),
+        ModernInputField(
+          controller: controllers['amount']!,
+          label: 'Số tiền',
+          hint: '100000',
+          prefixIcon: Icons.attach_money,
           keyboardType: TextInputType.number,
+          isRequired: true,
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'Vui lòng nhập số tiền';
-            }
-            if (double.tryParse(value) == null) {
-              return 'Số tiền không hợp lệ';
             }
             return null;
           },
           onChanged: (value) => onDataChanged('amount', value),
         ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['currency'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Đơn vị tiền tệ',
-            hintText: 'VND, USD, EUR...',
-            prefixIcon: const Icon(Icons.currency_exchange),
-          ),
-          onChanged: (value) => onDataChanged('currency', value),
+        ModernDropdownField(
+          label: 'Đơn vị tiền tệ',
+          hint: 'Chọn đơn vị tiền tệ',
+          prefixIcon: Icons.currency_exchange,
+          options: ['VND', 'USD', 'EUR', 'JPY', 'KRW'],
+          value: controllers['currency']!.text.isEmpty
+              ? 'VND'
+              : controllers['currency']!.text,
+          onChanged: (value) {
+            controllers['currency']!.text = value ?? 'VND';
+            onDataChanged('currency', value ?? 'VND');
+          },
         ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['description'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Mô tả',
-            hintText: 'Mô tả giao dịch',
-            prefixIcon: const Icon(Icons.description),
-          ),
+        ModernInputField(
+          controller: controllers['description']!,
+          label: 'Mô tả',
+          hint: 'Mô tả giao dịch',
+          prefixIcon: Icons.description,
+          maxLines: 2,
           onChanged: (value) => onDataChanged('description', value),
         ),
       ],
@@ -603,21 +515,14 @@ class QrFormFields extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Thông tin ứng dụng',
-          style: context.styles.titleMedium.copyWith(
-            color: context.colors.text,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['appName'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Tên ứng dụng',
-            hintText: 'Tên ứng dụng',
-            prefixIcon: const Icon(Icons.apps),
-          ),
+        _buildSectionHeader(context, 'Thông tin ứng dụng', Icons.shop),
+        const SizedBox(height: 16),
+        ModernInputField(
+          controller: controllers['appName']!,
+          label: 'Tên ứng dụng',
+          hint: 'Tên ứng dụng',
+          prefixIcon: Icons.apps,
+          isRequired: true,
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'Vui lòng nhập tên ứng dụng';
@@ -626,14 +531,12 @@ class QrFormFields extends StatelessWidget {
           },
           onChanged: (value) => onDataChanged('appName', value),
         ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['appId'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'ID ứng dụng',
-            hintText: 'com.example.app',
-            prefixIcon: const Icon(Icons.code),
-          ),
+        ModernInputField(
+          controller: controllers['appId']!,
+          label: 'ID ứng dụng',
+          hint: 'com.example.app',
+          prefixIcon: Icons.tag,
+          isRequired: true,
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'Vui lòng nhập ID ứng dụng';
@@ -642,15 +545,215 @@ class QrFormFields extends StatelessWidget {
           },
           onChanged: (value) => onDataChanged('appId', value),
         ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          controller: controllers['platform'],
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Nền tảng',
-            hintText: 'iOS, Android, Web...',
-            prefixIcon: const Icon(Icons.phone_android),
-          ),
-          onChanged: (value) => onDataChanged('platform', value),
+        ModernDropdownField(
+          label: 'Nền tảng',
+          hint: 'Chọn nền tảng',
+          prefixIcon: Icons.phone_android,
+          options: ['Android', 'iOS', 'Both'],
+          value: controllers['platform']!.text.isEmpty
+              ? 'Android'
+              : controllers['platform']!.text,
+          onChanged: (value) {
+            controllers['platform']!.text = value ?? 'Android';
+            onDataChanged('platform', value ?? 'Android');
+          },
+        ),
+      ],
+    );
+  }
+
+  // Các method build fields cho các loại QR code mới
+  Widget _buildRestaurantMenuFields(BuildContext context) {
+    return buildRestaurantMenuFields(context, controllers, onDataChanged);
+  }
+
+  Widget _buildProductFields(BuildContext context) {
+    return buildProductFields(context, controllers, onDataChanged);
+  }
+
+  Widget _buildBusinessCardFields(BuildContext context) {
+    return buildBusinessCardFields(context, controllers, onDataChanged);
+  }
+
+  Widget _buildMultiUrlFields(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(context, 'Nhiều URL', Icons.link),
+        const SizedBox(height: 16),
+        ModernInputField(
+          controller: controllers['urls']!,
+          label: 'Danh sách URL',
+          hint: 'Nhập các URL, phân cách bằng dấu phẩy',
+          prefixIcon: Icons.link,
+          maxLines: 5,
+          isRequired: true,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Vui lòng nhập ít nhất một URL';
+            }
+            return null;
+          },
+          onChanged: (value) => onDataChanged('urls', value),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPdfDocumentFields(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(context, 'Tài liệu PDF', Icons.picture_as_pdf),
+        const SizedBox(height: 16),
+        ModernInputField(
+          controller: controllers['url']!,
+          label: 'Link PDF',
+          hint: 'https://example.com/document.pdf',
+          prefixIcon: Icons.link,
+          keyboardType: TextInputType.url,
+          isRequired: true,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Vui lòng nhập link PDF';
+            }
+            return null;
+          },
+          onChanged: (value) => onDataChanged('url', value),
+        ),
+        ModernInputField(
+          controller: controllers['title']!,
+          label: 'Tiêu đề',
+          hint: 'Tiêu đề tài liệu',
+          prefixIcon: Icons.title,
+          onChanged: (value) => onDataChanged('title', value),
+        ),
+        ModernInputField(
+          controller: controllers['description']!,
+          label: 'Mô tả',
+          hint: 'Mô tả tài liệu',
+          prefixIcon: Icons.description,
+          maxLines: 3,
+          onChanged: (value) => onDataChanged('description', value),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildImageGalleryFields(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(context, 'Thư viện ảnh', Icons.photo_library),
+        const SizedBox(height: 16),
+        ModernInputField(
+          controller: controllers['url']!,
+          label: 'Link thư viện ảnh',
+          hint: 'https://example.com/gallery',
+          prefixIcon: Icons.link,
+          keyboardType: TextInputType.url,
+          isRequired: true,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Vui lòng nhập link thư viện ảnh';
+            }
+            return null;
+          },
+          onChanged: (value) => onDataChanged('url', value),
+        ),
+        ModernInputField(
+          controller: controllers['title']!,
+          label: 'Tiêu đề',
+          hint: 'Tiêu đề thư viện ảnh',
+          prefixIcon: Icons.title,
+          onChanged: (value) => onDataChanged('title', value),
+        ),
+        ModernInputField(
+          controller: controllers['description']!,
+          label: 'Mô tả',
+          hint: 'Mô tả thư viện ảnh',
+          prefixIcon: Icons.description,
+          maxLines: 3,
+          onChanged: (value) => onDataChanged('description', value),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVideoContentFields(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(context, 'Nội dung Video', Icons.video_library),
+        const SizedBox(height: 16),
+        ModernInputField(
+          controller: controllers['url']!,
+          label: 'Link video',
+          hint: 'https://example.com/video.mp4',
+          prefixIcon: Icons.link,
+          keyboardType: TextInputType.url,
+          isRequired: true,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Vui lòng nhập link video';
+            }
+            return null;
+          },
+          onChanged: (value) => onDataChanged('url', value),
+        ),
+        ModernInputField(
+          controller: controllers['title']!,
+          label: 'Tiêu đề',
+          hint: 'Tiêu đề video',
+          prefixIcon: Icons.title,
+          onChanged: (value) => onDataChanged('title', value),
+        ),
+        ModernInputField(
+          controller: controllers['description']!,
+          label: 'Mô tả',
+          hint: 'Mô tả video',
+          prefixIcon: Icons.description,
+          maxLines: 3,
+          onChanged: (value) => onDataChanged('description', value),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCryptoWalletFields(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(context, 'Ví tiền điện tử', Icons.currency_bitcoin),
+        const SizedBox(height: 16),
+        ModernInputField(
+          controller: controllers['address']!,
+          label: 'Địa chỉ ví',
+          hint: 'Nhập địa chỉ ví',
+          prefixIcon: Icons.account_balance_wallet,
+          isRequired: true,
+          validator: (value) {
+            if (value == null || value.isEmpty) {
+              return 'Vui lòng nhập địa chỉ ví';
+            }
+            return null;
+          },
+          onChanged: (value) => onDataChanged('address', value),
+        ),
+        ModernInputField(
+          controller: controllers['amount']!,
+          label: 'Số lượng',
+          hint: '0.01',
+          prefixIcon: Icons.numbers,
+          keyboardType: TextInputType.number,
+          onChanged: (value) => onDataChanged('amount', value),
+        ),
+        ModernInputField(
+          controller: controllers['label']!,
+          label: 'Nhãn',
+          hint: 'Ghi chú giao dịch',
+          prefixIcon: Icons.label,
+          onChanged: (value) => onDataChanged('label', value),
         ),
       ],
     );
@@ -660,29 +763,70 @@ class QrFormFields extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Thông tin QR Code',
-          style: context.styles.titleMedium.copyWith(
-            color: context.colors.text,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: AppSizes.paddingMedium),
-        TextFormField(
-          decoration: context.styles.inputDecoration.copyWith(
-            labelText: 'Nội dung',
-            hintText: 'Nhập nội dung...',
-            prefixIcon: const Icon(Icons.qr_code),
-          ),
+        _buildSectionHeader(context, 'Thông tin cơ bản', Icons.qr_code),
+        const SizedBox(height: 16),
+        ModernInputField(
+          controller: controllers['text'] ?? TextEditingController(),
+          label: 'Nội dung',
+          hint: 'Nhập nội dung...',
+          prefixIcon: Icons.text_fields,
           maxLines: 3,
+          isRequired: true,
           validator: (value) {
             if (value == null || value.isEmpty) {
               return 'Vui lòng nhập nội dung';
             }
             return null;
           },
+          onChanged: (value) => onDataChanged('text', value),
         ),
       ],
+    );
+  }
+
+  Widget _buildSectionHeader(
+      BuildContext context, String title, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            context.colors.primary.withOpacity(0.1),
+            context.colors.primary.withOpacity(0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: context.colors.primary.withOpacity(0.2),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              gradient: context.colors.primaryGradient,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              icon,
+              color: Colors.white,
+              size: 20,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              title,
+              style: context.styles.titleMedium.copyWith(
+                color: context.colors.text,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -159,6 +159,16 @@ class AppColors {
         end: Alignment.bottomRight,
       );
 
+  // Gradient colors
+  LinearGradient get lightPrimaryGradient => LinearGradient(
+        colors: [
+          AppColors.instance.premiumGoldLight,
+          Colors.white,
+        ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+
   LinearGradient get accentGradient => LinearGradient(
         colors: [
           currentPalette.accent,
@@ -204,6 +214,56 @@ class AppColors {
         const Color(0xFF000000),
         kdark: const Color(0xFFFFFFFF),
       );
+
+  // Premium colors
+  /// Premium colors (tông màu mới: xanh lam kết hợp vàng đồng, phù hợp với chủ đề hiện đại)
+  Color get premiumGold =>
+      const Color(0xFF3BA3F2); // Xanh lam sáng (primary blue)
+  Color get premiumGoldLight =>
+      const Color(0xFF81D4FA); // Xanh lam nhạt (light blue, đã giảm độ sáng)
+  Color get premiumGoldDark =>
+      const Color(0xFF1976D2); // Xanh lam đậm (dark blue)
+  Color get premiumAmber =>
+      const Color(0xFF64B5F6); // Xanh lam trung tính (blue accent)
+  Color get premiumYellow =>
+      const Color(0xFF90CAF9); // Xanh lam pastel (pastel blue)
+  Color get premiumOrange =>
+      const Color(0xFF1565C0); // Xanh lam navy (navy blue)
+
+  // Premium gradients
+  LinearGradient get premiumGradient => LinearGradient(
+        colors: [
+          premiumGold,
+          premiumGoldLight,
+          premiumAmber,
+        ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+
+  LinearGradient get premiumGradientVertical => LinearGradient(
+        colors: [
+          premiumGold,
+          premiumAmber,
+          premiumOrange,
+        ],
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+      );
+
+  RadialGradient get premiumGradientRadial => RadialGradient(
+        colors: [
+          premiumGoldLight,
+          premiumGold,
+          premiumGoldDark,
+        ],
+        center: Alignment.center,
+        radius: 0.8,
+      );
+
+  // Premium shimmer colors
+  Color get premiumShimmerBase => const Color(0xFFFFF8E1);
+  Color get premiumShimmerHighlight => const Color(0xFFFFFDE7);
 }
 
 // Keep original helper function for backward compatibility
