@@ -863,7 +863,7 @@ class _IntroductionScreenState extends State<IntroductionScreen>
         child: InkWell(
           borderRadius: BorderRadius.circular(AppSizes.radiusXLarge),
           onTap: () {
-            AppGoRouter.instance.goToLogin();
+            AppGoRouter.instance.goToHome();
           },
           child: Container(
             width: double.infinity,

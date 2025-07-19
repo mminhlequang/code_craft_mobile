@@ -1,3 +1,4 @@
+import 'package:app/src/utils/utils.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,6 +11,7 @@ import '../qr_scan/qr_scan_screen.dart';
 import '../qr_manage/qr_manage_screen.dart';
 import '../profile/profile_screen.dart';
 import '../premium/premium_screen.dart';
+import '../widgets/widget_popup_login.dart';
 import '../widgets/widgets.dart';
 import 'cubit/home_cubit.dart';
 import 'cubit/home_state.dart';
@@ -444,7 +446,8 @@ class _HomeTabState extends State<HomeTab> with TickerProviderStateMixin {
                     icon: Icons.folder,
                     color: context.colors.accent,
                     onTap: () {
-                      context.read<HomeCubit>().updateCurrentIndex(3);
+                      // context.read<HomeCubit>().updateCurrentIndex(3);
+                      appOpenDialog(PopupLoginRequired());
                     },
                   ),
                   _buildQuickActionCard(

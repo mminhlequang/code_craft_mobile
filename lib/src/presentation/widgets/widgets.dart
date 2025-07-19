@@ -16,3 +16,4 @@ export 'widget_textfield.dart';
 export 'premium_banner.dart';
 export 'premium_button.dart';
 export 'premium_card.dart';
+export 'widget_page_shimmer.dart';
